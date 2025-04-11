@@ -3,6 +3,7 @@ import { useState, useRef, FormEvent, ChangeEvent } from 'react';
 import { Plus, ChevronDown } from 'lucide-react';
 import { useChatContext } from '@/contexts/ChatContext';
 import { cn } from '@/lib/utils';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { 
   DropdownMenu,
   DropdownMenuContent,
@@ -20,6 +21,7 @@ export const ChatInput = ({ className }: ChatInputProps) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [isUploadMenuOpen, setIsUploadMenuOpen] = useState(false);
   const [selectedModel, setSelectedModel] = useState('Claude 3.7 Sonnet');
+  const isMobile = useIsMobile();
 
   const handleInputChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
     setInputValue(e.target.value);
@@ -60,7 +62,14 @@ export const ChatInput = ({ className }: ChatInputProps) => {
   );
 
   return (
-    <form onSubmit={handleSubmit} className={cn("relative max-w-[672px] mx-auto w-full px-4", className)}>
+    <form 
+      onSubmit={handleSubmit} 
+      className={cn(
+        "relative mx-auto w-full px-4",
+        isMobile ? "fixed bottom-0 left-0 pb-4 pt-2 bg-claude-beige" : "max-w-[672px]",
+        className
+      )}
+    >
       <div className="relative flex items-end bg-white border border-gray-300 rounded-2xl shadow-lg">
         <div className="flex items-center p-2">
           <DropdownMenu open={isUploadMenuOpen} onOpenChange={setIsUploadMenuOpen}>

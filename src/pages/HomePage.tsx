@@ -2,9 +2,12 @@
 import { useEffect } from 'react';
 import { ChatInput } from '@/components/ui/ChatInput';
 import { useChatContext } from '@/contexts/ChatContext';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { cn } from '@/lib/utils';
 
 const HomePage = () => {
   const { setCurrentChat } = useChatContext();
+  const isMobile = useIsMobile();
 
   // Clear current chat when coming to home page
   useEffect(() => {
@@ -13,14 +16,17 @@ const HomePage = () => {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex-1 flex flex-col items-center justify-center">
+      <div className={cn(
+        "flex-1 flex flex-col items-center",
+        isMobile ? "justify-start pt-16" : "justify-center"
+      )}>
         <div className="text-claude-orange text-3xl mb-4">*</div>
         <h1 className="text-3xl font-normal mb-8">Evening, Clarity</h1>
-        <div className="w-full max-w-2xl">
-          <ChatInput />
+        <div className="w-full">
+          {!isMobile && <ChatInput />}
         </div>
       </div>
-      <div className="h-16"></div> {/* Spacer at bottom */}
+      {isMobile && <ChatInput />}
     </div>
   );
 };

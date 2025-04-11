@@ -33,38 +33,37 @@ export const ChatMessages = () => {
           currentChat.messages.map((message) => (
             <div 
               key={message.id} 
-              className={cn(
-                "mb-6 group",
-                message.role === 'user' 
-                  ? "flex justify-end" 
-                  : "flex justify-start"
-              )}
+              className="mb-6 group"
               onMouseEnter={() => setHoveredMessageId(message.id)}
               onMouseLeave={() => setHoveredMessageId(null)}
             >
               {message.role === 'user' ? (
-                <div className="max-w-[80%] relative flex items-end gap-2">
-                  <div
-                    className="bg-blue-500 text-white rounded-xl px-4 py-3 whitespace-pre-wrap break-words"
-                  >
-                    {message.content}
+                <div className="flex justify-end">
+                  <div className="max-w-[80%] relative flex items-end gap-2">
+                    <div
+                      className="bg-blue-500 text-white rounded-xl px-4 py-3 whitespace-pre-wrap break-words"
+                    >
+                      {message.content}
+                      
+                      {hoveredMessageId === message.id && (
+                        <button 
+                          className="absolute -top-8 right-2 p-1 rounded hover:bg-gray-100 bg-white shadow-sm"
+                        >
+                          <Pencil size={16} className="text-gray-500" />
+                        </button>
+                      )}
+                    </div>
                     
-                    {hoveredMessageId === message.id && (
-                      <button 
-                        className="absolute -top-8 right-2 p-1 rounded hover:bg-gray-100 bg-white shadow-sm"
-                      >
-                        <Pencil size={16} className="text-gray-500" />
-                      </button>
-                    )}
-                  </div>
-                  
-                  <div className="flex-shrink-0 w-7 h-7 rounded-full bg-gray-300 flex items-center justify-center">
-                    <span className="text-xs font-medium">CW</span>
+                    <div className="flex-shrink-0 w-7 h-7 rounded-full bg-gray-300 flex items-center justify-center">
+                      <span className="text-xs font-medium">CW</span>
+                    </div>
                   </div>
                 </div>
               ) : (
-                <div className="max-w-[80%] whitespace-pre-wrap break-words text-gray-800">
-                  {message.content}
+                <div className="flex justify-start">
+                  <div className="max-w-[80%] whitespace-pre-wrap break-words text-gray-800">
+                    {message.content}
+                  </div>
                 </div>
               )}
             </div>
