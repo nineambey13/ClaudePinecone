@@ -1,6 +1,6 @@
 
 import { useState, useRef, FormEvent, ChangeEvent } from 'react';
-import { Plus, Equal, ChevronDown, ArrowUp } from 'lucide-react';
+import { Plus, ChevronDown, ArrowUp } from 'lucide-react';
 import { useChatContext } from '@/contexts/ChatContext';
 import { cn } from '@/lib/utils';
 import { 
@@ -18,7 +18,6 @@ export const ChatInput = ({ className }: ChatInputProps) => {
   const { sendMessage } = useChatContext();
   const [inputValue, setInputValue] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const [isToolsMenuOpen, setIsToolsMenuOpen] = useState(false);
   const [isUploadMenuOpen, setIsUploadMenuOpen] = useState(false);
   const [selectedModel, setSelectedModel] = useState('Claude 3.7 Sonnet');
 
@@ -53,17 +52,24 @@ export const ChatInput = ({ className }: ChatInputProps) => {
     'Claude 3 Haiku',
   ];
 
+  // Up arrow SVG for send button
+  const SendIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 256 256">
+      <path d="M208.49,120.49a12,12,0,0,1-17,0L140,69V216a12,12,0,0,1-24,0V69L64.49,120.49a12,12,0,0,1-17-17l72-72a12,12,0,0,1,17,0l72,72A12,12,0,0,1,208.49,120.49Z"></path>
+    </svg>
+  );
+
   return (
-    <form onSubmit={handleSubmit} className={cn("relative max-w-3xl mx-auto w-full px-4", className)}>
-      <div className="relative flex items-end bg-white border border-gray-200 rounded-xl shadow-sm">
-        <div className="flex items-center border-r border-gray-200 p-2">
+    <form onSubmit={handleSubmit} className={cn("relative max-w-[672px] mx-auto w-full px-4", className)}>
+      <div className="relative flex items-end bg-white border border-gray-300 rounded-2xl shadow-lg">
+        <div className="flex items-center p-2">
           <DropdownMenu open={isUploadMenuOpen} onOpenChange={setIsUploadMenuOpen}>
             <DropdownMenuTrigger asChild>
               <button
                 type="button"
-                className="p-2 rounded hover:bg-gray-100 transition-colors"
+                className="p-2 rounded hover:bg-gray-100 transition-colors h-8 w-8 border border-gray-200 flex items-center justify-center"
               >
-                <Plus size={20} className="text-gray-500" />
+                <Plus size={18} className="text-gray-500" />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-56">
@@ -74,31 +80,15 @@ export const ChatInput = ({ className }: ChatInputProps) => {
           </DropdownMenu>
         </div>
 
-        <div className="flex items-center border-r border-gray-200 p-2">
-          <DropdownMenu open={isToolsMenuOpen} onOpenChange={setIsToolsMenuOpen}>
-            <DropdownMenuTrigger asChild>
-              <button
-                type="button"
-                className="p-2 rounded hover:bg-gray-100 transition-colors"
-              >
-                <Equal size={20} className="text-gray-500" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-56">
-              <DropdownMenuItem>Use style &gt;</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-
         <div className="flex-1 py-3 px-2">
           <textarea
             ref={textareaRef}
             value={inputValue}
             onChange={handleInputChange}
             placeholder="How can I help you today?"
-            className="w-full resize-none outline-none border-0 focus:ring-0 max-h-36 overflow-y-auto"
+            className="w-full resize-none outline-none border-0 focus:ring-0 max-h-36 overflow-y-auto bg-transparent"
             rows={1}
-            style={{ height: 'auto' }}
+            style={{ height: 'auto', lineHeight: '24px' }}
           />
         </div>
 
@@ -131,13 +121,13 @@ export const ChatInput = ({ className }: ChatInputProps) => {
             type="submit"
             disabled={!inputValue.trim()}
             className={cn(
-              "rounded-full p-2 transition-colors",
+              "rounded-md p-2 transition-colors h-8 w-8 flex items-center justify-center",
               inputValue.trim()
                 ? "bg-claude-orange text-white hover:bg-opacity-90"
                 : "bg-gray-200 text-gray-400"
             )}
           >
-            <ArrowUp size={18} />
+            <SendIcon />
           </button>
         </div>
       </div>

@@ -1,5 +1,5 @@
 
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import { Pencil } from 'lucide-react';
 import { useChatContext } from '@/contexts/ChatContext';
 import { cn } from '@/lib/utils';
@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 export const ChatMessages = () => {
   const { chats, currentChatId } = useChatContext();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [hoveredMessageId, setHoveredMessageId] = useState<string | null>(null);
 
   const currentChat = currentChatId 
     ? chats.find(chat => chat.id === currentChatId) 
@@ -34,41 +35,38 @@ export const ChatMessages = () => {
               key={message.id} 
               className={cn(
                 "mb-6 group",
-                message.role === 'user' ? "flex justify-end" : "flex justify-start"
+                message.role === 'user' 
+                  ? "flex justify-end" 
+                  : "flex justify-start"
               )}
+              onMouseEnter={() => setHoveredMessageId(message.id)}
+              onMouseLeave={() => setHoveredMessageId(null)}
             >
-              <div className="max-w-[80%] relative flex items-end gap-2">
-                {message.role === 'assistant' && (
-                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-claude-orange flex items-center justify-center text-white">
-                    <span className="text-xl">*</span>
+              {message.role === 'user' ? (
+                <div className="max-w-[80%] relative flex items-end gap-2">
+                  <div
+                    className="bg-blue-500 text-white rounded-xl px-4 py-3 whitespace-pre-wrap break-words"
+                  >
+                    {message.content}
+                    
+                    {hoveredMessageId === message.id && (
+                      <button 
+                        className="absolute -top-8 right-2 p-1 rounded hover:bg-gray-100 bg-white shadow-sm"
+                      >
+                        <Pencil size={16} className="text-gray-500" />
+                      </button>
+                    )}
                   </div>
-                )}
-                
-                <div
-                  className={cn(
-                    "rounded-xl px-4 py-3 whitespace-pre-wrap break-words",
-                    message.role === 'user'
-                      ? "bg-blue-500 text-white"
-                      : "bg-claude-gray text-gray-800"
-                  )}
-                >
+                  
+                  <div className="flex-shrink-0 w-7 h-7 rounded-full bg-gray-300 flex items-center justify-center">
+                    <span className="text-xs font-medium">CW</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="max-w-[80%] whitespace-pre-wrap break-words text-gray-800">
                   {message.content}
                 </div>
-                
-                {message.role === 'user' && (
-                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
-                    <span className="text-sm font-medium">CW</span>
-                  </div>
-                )}
-                
-                {message.role === 'user' && (
-                  <button 
-                    className="absolute -top-8 right-2 opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-gray-100"
-                  >
-                    <Pencil size={16} className="text-gray-500" />
-                  </button>
-                )}
-              </div>
+              )}
             </div>
           ))
         )}

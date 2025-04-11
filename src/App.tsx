@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { MainLayout } from "./components/layout/MainLayout";
 import HomePage from "./pages/HomePage";
 import ChatPage from "./pages/ChatPage";
+import ChatHistoryPage from "./pages/ChatHistoryPage";
 import SettingsPage from "./pages/SettingsPage";
 import LogoutPage from "./pages/LogoutPage";
 import NotFound from "./pages/NotFound";
@@ -22,6 +23,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<MainLayout><HomePage /></MainLayout>} />
           <Route path="/chat/:id" element={<MainLayout><ChatPage /></MainLayout>} />
+          <Route path="/chats" element={<MainLayout><ChatHistoryPage /></MainLayout>} />
           <Route path="/settings" element={<MainLayout><SettingsPage /></MainLayout>} />
           <Route path="/logout" element={<LogoutPage />} />
           <Route path="*" element={<NotFound />} />
