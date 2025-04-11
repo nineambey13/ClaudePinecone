@@ -47,12 +47,11 @@ export const Sidebar = () => {
       <button
         onClick={handleNewChat}
         className={cn(
-          "flex items-center rounded-md hover:bg-opacity-90 transition-all mx-4 my-2",
+          "flex items-center mx-4 my-2",
           sidebarExpanded ? "px-4 py-2" : "justify-center p-2",
-          "bg-claude-orange text-white"
         )}
       >
-        <div className="rounded-full bg-white bg-opacity-20 p-1">
+        <div className="rounded-full bg-claude-orange text-white p-2 flex items-center justify-center">
           <Plus size={18} />
         </div>
         {sidebarExpanded && <span className="ml-2">New chat</span>}

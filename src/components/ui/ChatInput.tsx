@@ -1,6 +1,6 @@
 
 import { useState, useRef, FormEvent, ChangeEvent } from 'react';
-import { Plus, ChevronDown, ArrowUp } from 'lucide-react';
+import { Plus, ChevronDown } from 'lucide-react';
 import { useChatContext } from '@/contexts/ChatContext';
 import { cn } from '@/lib/utils';
 import { 
