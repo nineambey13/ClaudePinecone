@@ -24,6 +24,7 @@ type ChatContextType = {
   sendMessage: (content: string) => void;
   setCurrentChat: (chatId: string) => void;
   toggleSidebar: () => void;
+  deleteChat: (chatId: string) => void;
   userProfile: {
     initials: string;
     name: string;
@@ -99,6 +100,15 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     );
   };
 
+  const deleteChat = (chatId: string) => {
+    setChats((prevChats) => prevChats.filter((chat) => chat.id !== chatId));
+    
+    // If the deleted chat is the current one, clear the current chat
+    if (currentChatId === chatId) {
+      setCurrentChatId(null);
+    }
+  };
+
   const sendMessage = (content: string) => {
     if (!currentChatId || !content.trim()) return;
 
@@ -151,6 +161,7 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         sendMessage,
         setCurrentChat: setCurrentChatId,
         toggleSidebar,
+        deleteChat,
         userProfile,
       }}
     >
