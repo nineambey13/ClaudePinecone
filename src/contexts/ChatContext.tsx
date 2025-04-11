@@ -1,0 +1,160 @@
+
+import React, { createContext, useContext, useState, ReactNode } from 'react';
+
+export type Message = {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: Date;
+};
+
+export type Chat = {
+  id: string;
+  title: string;
+  messages: Message[];
+  createdAt: Date;
+};
+
+type ChatContextType = {
+  chats: Chat[];
+  currentChatId: string | null;
+  sidebarExpanded: boolean;
+  createChat: () => string;
+  updateChatTitle: (chatId: string, title: string) => void;
+  sendMessage: (content: string) => void;
+  setCurrentChat: (chatId: string) => void;
+  toggleSidebar: () => void;
+  userProfile: {
+    initials: string;
+    name: string;
+    role: string;
+  };
+};
+
+const ChatContext = createContext<ChatContextType | undefined>(undefined);
+
+export const useChatContext = () => {
+  const context = useContext(ChatContext);
+  if (!context) {
+    throw new Error('useChatContext must be used within a ChatProvider');
+  }
+  return context;
+};
+
+export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [chats, setChats] = useState<Chat[]>([
+    {
+      id: '1',
+      title: 'The Science of Slow-Cooking Beef',
+      messages: [],
+      createdAt: new Date(),
+    },
+    {
+      id: '2',
+      title: 'Understanding Firebase vs Supabase',
+      messages: [],
+      createdAt: new Date(),
+    },
+    {
+      id: '3',
+      title: 'Aligning Text Field in FlutterFlow',
+      messages: [],
+      createdAt: new Date(),
+    },
+    {
+      id: '4',
+      title: 'Troubleshooting Electron app startup',
+      messages: [],
+      createdAt: new Date(),
+    },
+    {
+      id: '5',
+      title: 'Building a Custom Claude Chat UI',
+      messages: [],
+      createdAt: new Date(),
+    },
+  ]);
+  
+  const [currentChatId, setCurrentChatId] = useState<string | null>(null);
+  const [sidebarExpanded, setSidebarExpanded] = useState(true);
+
+  const createChat = () => {
+    const newChat: Chat = {
+      id: Date.now().toString(),
+      title: 'New Chat',
+      messages: [],
+      createdAt: new Date(),
+    };
+    
+    setChats((prevChats) => [newChat, ...prevChats]);
+    setCurrentChatId(newChat.id);
+    return newChat.id;
+  };
+
+  const updateChatTitle = (chatId: string, title: string) => {
+    setChats((prevChats) =>
+      prevChats.map((chat) =>
+        chat.id === chatId ? { ...chat, title } : chat
+      )
+    );
+  };
+
+  const sendMessage = (content: string) => {
+    if (!currentChatId || !content.trim()) return;
+
+    const userMessage: Message = {
+      id: `user-${Date.now()}`,
+      role: 'user',
+      content,
+      timestamp: new Date(),
+    };
+
+    // Placeholder for assistant response
+    const assistantMessage: Message = {
+      id: `assistant-${Date.now()}`,
+      role: 'assistant',
+      content: 'This is a placeholder response from Claude. In a real application, this would be the AI\'s response.',
+      timestamp: new Date(),
+    };
+
+    setChats((prevChats) =>
+      prevChats.map((chat) => {
+        if (chat.id === currentChatId) {
+          return {
+            ...chat,
+            messages: [...chat.messages, userMessage, assistantMessage],
+          };
+        }
+        return chat;
+      })
+    );
+  };
+
+  const toggleSidebar = () => {
+    setSidebarExpanded((prev) => !prev);
+  };
+
+  const userProfile = {
+    initials: 'CW',
+    name: 'Clarity World',
+    role: 'Creator',
+  };
+
+  return (
+    <ChatContext.Provider
+      value={{
+        chats,
+        currentChatId,
+        sidebarExpanded,
+        createChat,
+        updateChatTitle,
+        sendMessage,
+        setCurrentChat: setCurrentChatId,
+        toggleSidebar,
+        userProfile,
+      }}
+    >
+      {children}
+    </ChatContext.Provider>
+  );
+};
