@@ -13,9 +13,10 @@ import {
 
 type ChatInputProps = {
   className?: string;
+  placeholder?: string;
 };
 
-export const ChatInput = ({ className }: ChatInputProps) => {
+export const ChatInput = ({ className, placeholder = "Message Claude..." }: ChatInputProps) => {
   const { sendMessage, createChat, currentChatId } = useChatContext();
   const [inputValue, setInputValue] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -37,7 +38,7 @@ export const ChatInput = ({ className }: ChatInputProps) => {
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (inputValue.trim()) {
-      // If we don't have a current chat, create one first
+      // If we don't have a current chat, create one
       if (!currentChatId) {
         createChat();
       }
@@ -73,8 +74,8 @@ export const ChatInput = ({ className }: ChatInputProps) => {
     <form 
       onSubmit={handleSubmit} 
       className={cn(
-        "relative mx-auto w-full px-4",
-        isMobile ? "fixed bottom-0 left-0 w-full pb-4 pt-2 bg-claude-beige" : "max-w-[672px]",
+        "relative w-full",
+        isMobile ? "fixed bottom-0 left-0 w-full pb-4 pt-2 bg-claude-beige" : "",
         className
       )}
     >
@@ -102,7 +103,7 @@ export const ChatInput = ({ className }: ChatInputProps) => {
             ref={textareaRef}
             value={inputValue}
             onChange={handleInputChange}
-            placeholder="How can I help you today?"
+            placeholder={placeholder}
             className="w-full resize-none outline-none border-0 focus:ring-0 max-h-36 overflow-y-auto bg-transparent"
             rows={1}
             style={{ height: 'auto', lineHeight: '24px' }}
@@ -140,7 +141,7 @@ export const ChatInput = ({ className }: ChatInputProps) => {
             className={cn(
               "rounded-md p-2 transition-colors h-8 w-8 flex items-center justify-center",
               inputValue.trim()
-                ? "bg-claude-orange text-white hover:bg-opacity-90"
+                ? "bg-[#e7ab98] text-white hover:bg-opacity-90"
                 : "bg-gray-200 text-gray-400"
             )}
           >
