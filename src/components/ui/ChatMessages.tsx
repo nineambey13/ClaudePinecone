@@ -3,9 +3,10 @@ import { useRef, useEffect, useState } from 'react';
 import { Pencil } from 'lucide-react';
 import { useChatContext } from '@/contexts/ChatContext';
 import { cn } from '@/lib/utils';
+import { Avatar, AvatarFallback } from './avatar';
 
 export const ChatMessages = () => {
-  const { chats, currentChatId } = useChatContext();
+  const { chats, currentChatId, userProfile } = useChatContext();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [hoveredMessageId, setHoveredMessageId] = useState<string | null>(null);
 
@@ -38,10 +39,16 @@ export const ChatMessages = () => {
               onMouseLeave={() => setHoveredMessageId(null)}
             >
               {message.role === 'user' ? (
-                <div className="flex justify-end">
-                  <div className="max-w-[80%] relative flex items-end gap-2">
+                <div className="flex justify-start items-start gap-2">
+                  <Avatar className="h-7 w-7 flex-shrink-0">
+                    <AvatarFallback className="bg-gray-200 text-gray-700 text-xs">
+                      {userProfile.initials}
+                    </AvatarFallback>
+                  </Avatar>
+                  
+                  <div className="max-w-[80%] relative">
                     <div
-                      className="bg-blue-500 text-white rounded-xl px-4 py-3 whitespace-pre-wrap break-words"
+                      className="bg-[#f7f6f3] text-gray-800 rounded-xl px-4 py-3 whitespace-pre-wrap break-words relative"
                     >
                       {message.content}
                       
@@ -53,15 +60,11 @@ export const ChatMessages = () => {
                         </button>
                       )}
                     </div>
-                    
-                    <div className="flex-shrink-0 w-7 h-7 rounded-full bg-gray-300 flex items-center justify-center">
-                      <span className="text-xs font-medium">CW</span>
-                    </div>
                   </div>
                 </div>
               ) : (
-                <div className="flex justify-start">
-                  <div className="max-w-[80%] whitespace-pre-wrap break-words text-gray-800">
+                <div className="flex justify-start pl-9 mt-2">
+                  <div className="max-w-[85%] whitespace-pre-wrap break-words text-gray-800">
                     {message.content}
                   </div>
                 </div>

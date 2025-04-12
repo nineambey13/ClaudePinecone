@@ -1,3 +1,4 @@
+
 import { useState, useRef, FormEvent, ChangeEvent } from 'react';
 import { Plus, ChevronDown } from 'lucide-react';
 import { useChatContext } from '@/contexts/ChatContext';
@@ -73,7 +74,7 @@ export const ChatInput = ({ className }: ChatInputProps) => {
       onSubmit={handleSubmit} 
       className={cn(
         "relative mx-auto w-full px-4",
-        isMobile ? "fixed bottom-0 left-0 pb-4 pt-2 bg-claude-beige" : "max-w-[672px]",
+        isMobile ? "fixed bottom-0 left-0 w-full pb-4 pt-2 bg-claude-beige" : "max-w-[672px]",
         className
       )}
     >
