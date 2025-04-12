@@ -27,7 +27,8 @@ export const Sidebar = () => {
   const navigate = useNavigate();
 
   const handleNewChat = () => {
-    // Navigate to homepage instead of creating a new chat directly
+    // Clear current chat and navigate to home page
+    setCurrentChat('');
     navigate('/');
   };
 

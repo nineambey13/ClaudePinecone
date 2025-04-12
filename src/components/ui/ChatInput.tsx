@@ -79,15 +79,15 @@ export const ChatInput = ({ className, placeholder = "Message Claude..." }: Chat
         className
       )}
     >
-      <div className="relative flex items-end bg-white border border-gray-300 rounded-2xl shadow-lg">
+      <div className="relative flex items-end bg-white border border-gray-300 rounded-3xl shadow-lg h-[80px]">
         <div className="flex items-center p-2">
           <DropdownMenu open={isUploadMenuOpen} onOpenChange={setIsUploadMenuOpen}>
             <DropdownMenuTrigger asChild>
               <button
                 type="button"
-                className="p-2 rounded hover:bg-gray-100 transition-colors h-8 w-8 border border-gray-200 flex items-center justify-center"
+                className="p-2 rounded-full hover:bg-gray-100 transition-colors h-10 w-10 border border-gray-200 flex items-center justify-center ml-2"
               >
-                <Plus size={18} className="text-gray-500" />
+                <Plus size={20} className="text-gray-500" />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-56">
@@ -104,18 +104,18 @@ export const ChatInput = ({ className, placeholder = "Message Claude..." }: Chat
             value={inputValue}
             onChange={handleInputChange}
             placeholder={placeholder}
-            className="w-full resize-none outline-none border-0 focus:ring-0 max-h-36 overflow-y-auto bg-transparent"
+            className="w-full resize-none outline-none border-0 focus:ring-0 max-h-36 overflow-y-auto bg-transparent text-base"
             rows={1}
             style={{ height: 'auto', lineHeight: '24px' }}
           />
         </div>
 
-        <div className="p-2 flex items-center gap-2">
+        <div className="p-2 flex items-center gap-2 mr-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button
                 type="button"
-                className="flex items-center gap-1 text-sm px-2 py-1 rounded hover:bg-gray-100 transition-colors"
+                className="flex items-center gap-1 text-sm px-3 py-2 rounded hover:bg-gray-100 transition-colors"
               >
                 {selectedModel}
                 <ChevronDown size={16} />
@@ -139,7 +139,7 @@ export const ChatInput = ({ className, placeholder = "Message Claude..." }: Chat
             type="submit"
             disabled={!inputValue.trim()}
             className={cn(
-              "rounded-md p-2 transition-colors h-8 w-8 flex items-center justify-center",
+              "rounded-full p-2 transition-colors h-10 w-10 flex items-center justify-center",
               inputValue.trim()
                 ? "bg-[#e7ab98] text-white hover:bg-opacity-90"
                 : "bg-gray-200 text-gray-400"

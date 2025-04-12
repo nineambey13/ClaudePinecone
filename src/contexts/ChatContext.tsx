@@ -115,7 +115,9 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     // If there's no current chat, create one
     if (!currentChatId) {
       const newChatId = createChat();
-      addMessagesToChat(newChatId, content);
+      setTimeout(() => {
+        addMessagesToChat(newChatId, content);
+      }, 10);
     } else {
       addMessagesToChat(currentChatId, content);
     }
@@ -131,7 +133,7 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     // Placeholder for assistant response
     const assistantMessage: Message = {
-      id: `assistant-${Date.now()}`,
+      id: `assistant-${Date.now() + 100}`,
       role: 'assistant',
       content: 'This is a placeholder response from Claude. In a real application, this would be the AI\'s response.',
       timestamp: new Date(),
@@ -140,10 +142,20 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setChats((prevChats) =>
       prevChats.map((chat) => {
         if (chat.id === chatId) {
-          return {
+          // Update chat title based on first message
+          const updatedChat = {
             ...chat,
             messages: [...chat.messages, userMessage, assistantMessage],
           };
+          
+          // If this is the first message, update the title
+          if (chat.messages.length === 0) {
+            updatedChat.title = content.length > 30 
+              ? `${content.substring(0, 30)}...` 
+              : content;
+          }
+          
+          return updatedChat;
         }
         return chat;
       })
