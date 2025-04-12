@@ -1,117 +1,89 @@
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, ReactNode } from 'react';
 
-export type Message = {
+type UserProfile = {
+  name: string;
+  email: string;
+  avatarUrl?: string;
+};
+
+type Message = {
   id: string;
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
 };
 
-export type Chat = {
+type Chat = {
   id: string;
   title: string;
   messages: Message[];
   createdAt: Date;
+  updatedAt: Date;
 };
 
 type ChatContextType = {
   chats: Chat[];
-  currentChatId: string | null;
+  currentChatId: string;
+  userProfile: UserProfile;
   sidebarExpanded: boolean;
   createChat: () => string;
-  updateChatTitle: (chatId: string, title: string) => void;
-  sendMessage: (content: string) => void;
   setCurrentChat: (chatId: string) => void;
+  sendMessage: (content: string) => void;
   toggleSidebar: () => void;
-  deleteChat: (chatId: string) => void;
-  userProfile: {
-    initials: string;
-    name: string;
-    role: string;
-  };
+  setSidebarExpanded: (expanded: boolean) => void;
+};
+
+const dummyUserProfile: UserProfile = {
+  name: 'Clarity',
+  email: 'clarity@example.com',
 };
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
 
-export const useChatContext = () => {
+export const useChatContext = (): ChatContextType => {
   const context = useContext(ChatContext);
   if (!context) {
-    throw new Error('useChatContext must be used within a ChatProvider');
+    throw new Error("useChatContext must be used within a ChatProvider");
   }
   return context;
 };
 
-export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [chats, setChats] = useState<Chat[]>([
-    {
-      id: '1',
-      title: 'The Science of Slow-Cooking Beef',
-      messages: [],
-      createdAt: new Date(),
-    },
-    {
-      id: '2',
-      title: 'Understanding Firebase vs Supabase',
-      messages: [],
-      createdAt: new Date(),
-    },
-    {
-      id: '3',
-      title: 'Aligning Text Field in FlutterFlow',
-      messages: [],
-      createdAt: new Date(),
-    },
-    {
-      id: '4',
-      title: 'Troubleshooting Electron app startup',
-      messages: [],
-      createdAt: new Date(),
-    },
-    {
-      id: '5',
-      title: 'Building a Custom Claude Chat UI',
-      messages: [],
-      createdAt: new Date(),
-    },
-  ]);
-  
-  const [currentChatId, setCurrentChatId] = useState<string | null>(null);
+export const ChatProvider = ({ children }: { children: ReactNode }) => {
+  const [chats, setChats] = useState<Chat[]>([]);
+  const [currentChatId, setCurrentChatId] = useState('');
   const [sidebarExpanded, setSidebarExpanded] = useState(true);
 
-  const createChat = () => {
-    const newChat: Chat = {
-      id: Date.now().toString(),
-      title: 'New Chat',
-      messages: [],
-      createdAt: new Date(),
-    };
-    
-    setChats((prevChats) => [newChat, ...prevChats]);
-    setCurrentChatId(newChat.id);
-    return newChat.id;
+  const toggleSidebar = () => {
+    setSidebarExpanded(prev => !prev);
   };
 
-  const updateChatTitle = (chatId: string, title: string) => {
-    setChats((prevChats) =>
-      prevChats.map((chat) =>
-        chat.id === chatId ? { ...chat, title } : chat
-      )
-    );
-  };
-
-  const deleteChat = (chatId: string) => {
-    setChats((prevChats) => prevChats.filter((chat) => chat.id !== chatId));
+  const setCurrentChat = (chatId: string) => {
+    setCurrentChatId(chatId);
     
-    // If the deleted chat is the current one, clear the current chat
-    if (currentChatId === chatId) {
-      setCurrentChatId(null);
+    // If we're selecting a chat, make sure sidebar is expanded
+    if (chatId) {
+      setSidebarExpanded(true);
     }
   };
 
-  const sendMessage = (content: string) => {
-    if (!content.trim()) return;
+  const createChat = (): string => {
+    const newChatId = `chat-${Date.now()}`;
+    const newChat: Chat = {
+      id: newChatId,
+      title: 'New Chat',
+      messages: [],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
 
+    setChats(prevChats => [newChat, ...prevChats]);
+    setCurrentChatId(newChatId);
+    
+    return newChatId;
+  };
+
+  const sendMessage = (content: string) => {
     // If there's no current chat, create one
     if (!currentChatId) {
       const newChatId = createChat();
@@ -124,6 +96,7 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const addMessagesToChat = (chatId: string, content: string) => {
+    // Create user message
     const userMessage: Message = {
       id: `user-${Date.now()}`,
       role: 'user',
@@ -162,32 +135,17 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     );
   };
 
-  const toggleSidebar = () => {
-    setSidebarExpanded((prev) => !prev);
+  const value: ChatContextType = {
+    chats,
+    currentChatId,
+    userProfile: dummyUserProfile,
+    sidebarExpanded,
+    createChat,
+    setCurrentChat,
+    sendMessage,
+    toggleSidebar,
+    setSidebarExpanded,
   };
 
-  const userProfile = {
-    initials: 'CW',
-    name: 'Clarity World',
-    role: 'Creator',
-  };
-
-  return (
-    <ChatContext.Provider
-      value={{
-        chats,
-        currentChatId,
-        sidebarExpanded,
-        createChat,
-        updateChatTitle,
-        sendMessage,
-        setCurrentChat: setCurrentChatId,
-        toggleSidebar,
-        deleteChat,
-        userProfile,
-      }}
-    >
-      {children}
-    </ChatContext.Provider>
-  );
+  return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;
 };

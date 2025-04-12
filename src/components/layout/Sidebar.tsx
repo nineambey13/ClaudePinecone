@@ -32,49 +32,50 @@ export const Sidebar = () => {
     navigate('/');
   };
 
+  // Don't render the sidebar if it's not expanded
+  if (!sidebarExpanded) {
+    return (
+      <button
+        onClick={toggleSidebar}
+        className="fixed left-0 top-1/2 transform -translate-y-1/2 bg-white rounded-r-md p-1 shadow-md border border-l-0 border-claude-border z-10"
+      >
+        <ChevronRight size={16} className="text-gray-400" />
+      </button>
+    );
+  }
+
   return (
     <aside
-      className={cn(
-        "bg-claude-beige border-r border-claude-border h-full transition-all duration-300 flex flex-col",
-        sidebarExpanded ? "w-72" : "w-16"
-      )}
+      className="bg-claude-beige border-r border-claude-border h-full transition-all duration-300 flex flex-col w-72"
     >
       <div className="flex items-center p-4">
-        {sidebarExpanded && (
-          <h1 className="text-xl font-semibold">Claude</h1>
-        )}
+        <h1 className="text-xl font-semibold">Claude</h1>
       </div>
 
       <button
         onClick={handleNewChat}
-        className={cn(
-          "flex items-center mx-4 my-2",
-          sidebarExpanded ? "px-4 py-2" : "justify-center p-2",
-        )}
+        className="flex items-center mx-4 my-2 px-4 py-2"
       >
         <div className="rounded-full bg-claude-orange text-white p-2 flex items-center justify-center">
           <Plus size={18} />
         </div>
-        {sidebarExpanded && <span className="ml-2">New chat</span>}
+        <span className="ml-2">New chat</span>
       </button>
       
       <Link
         to="/chats"
-        className={cn(
-          "flex items-center px-4 py-2 mt-2 text-gray-700 hover:bg-gray-100 rounded-md",
-          !sidebarExpanded && "justify-center"
-        )}
+        className="flex items-center px-4 py-2 mt-2 text-gray-700 hover:bg-gray-100 rounded-md"
       >
         <ChatBubbleIcon />
-        {sidebarExpanded && <span className="ml-2">Chats</span>}
+        <span className="ml-2">Chats</span>
       </Link>
 
       <div className="px-2 mb-4 font-medium text-sm">
-        {sidebarExpanded && <p className="text-xs text-gray-500 px-2 py-1">Recents</p>}
+        <p className="text-xs text-gray-500 px-2 py-1">Recents</p>
       </div>
 
       <div className="flex-1 overflow-y-auto px-2">
-        {sidebarExpanded && chats.map((chat) => (
+        {chats.map((chat) => (
           <Link
             key={chat.id}
             to={`/chat/${chat.id}`}
@@ -98,11 +99,7 @@ export const Sidebar = () => {
         onClick={toggleSidebar}
         className="absolute left-0 top-1/2 transform -translate-y-1/2 bg-white rounded-r-md p-1 shadow-md border border-l-0 border-claude-border"
       >
-        {sidebarExpanded ? (
-          <ChevronLeft size={16} className="text-gray-400" />
-        ) : (
-          <ChevronRight size={16} className="text-gray-400" />
-        )}
+        <ChevronLeft size={16} className="text-gray-400" />
       </button>
     </aside>
   );

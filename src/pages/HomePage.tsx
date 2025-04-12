@@ -6,13 +6,14 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 
 const HomePage = () => {
-  const { setCurrentChat } = useChatContext();
+  const { setCurrentChat, setSidebarExpanded } = useChatContext();
   const isMobile = useIsMobile();
 
-  // Clear current chat when coming to home page
+  // Clear current chat and hide sidebar when coming to home page
   useEffect(() => {
     setCurrentChat('');
-  }, [setCurrentChat]);
+    setSidebarExpanded(false);
+  }, [setCurrentChat, setSidebarExpanded]);
 
   return (
     <div className="flex flex-col h-full">
@@ -22,7 +23,7 @@ const HomePage = () => {
       )}>
         <div className="text-claude-orange text-3xl mb-4">*</div>
         <h1 className="text-3xl font-normal mb-8">Good evening, Clarity</h1>
-        <div className="w-full max-w-[672px] px-4 mx-auto">
+        <div className="w-full max-w-[95%] px-4 mx-auto">
           <ChatInput placeholder="How can I help you today?" className="relative" />
         </div>
       </div>
