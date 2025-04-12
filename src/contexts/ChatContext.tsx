@@ -110,8 +110,18 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const sendMessage = (content: string) => {
-    if (!currentChatId || !content.trim()) return;
+    if (!content.trim()) return;
 
+    // If there's no current chat, create one
+    if (!currentChatId) {
+      const newChatId = createChat();
+      addMessagesToChat(newChatId, content);
+    } else {
+      addMessagesToChat(currentChatId, content);
+    }
+  };
+
+  const addMessagesToChat = (chatId: string, content: string) => {
     const userMessage: Message = {
       id: `user-${Date.now()}`,
       role: 'user',
@@ -129,7 +139,7 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     setChats((prevChats) =>
       prevChats.map((chat) => {
-        if (chat.id === currentChatId) {
+        if (chat.id === chatId) {
           return {
             ...chat,
             messages: [...chat.messages, userMessage, assistantMessage],

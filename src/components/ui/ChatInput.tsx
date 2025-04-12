@@ -1,4 +1,3 @@
-
 import { useState, useRef, FormEvent, ChangeEvent } from 'react';
 import { Plus, ChevronDown } from 'lucide-react';
 import { useChatContext } from '@/contexts/ChatContext';
@@ -16,7 +15,7 @@ type ChatInputProps = {
 };
 
 export const ChatInput = ({ className }: ChatInputProps) => {
-  const { sendMessage } = useChatContext();
+  const { sendMessage, createChat, currentChatId } = useChatContext();
   const [inputValue, setInputValue] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [isUploadMenuOpen, setIsUploadMenuOpen] = useState(false);
@@ -37,13 +36,21 @@ export const ChatInput = ({ className }: ChatInputProps) => {
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (inputValue.trim()) {
-      sendMessage(inputValue);
-      setInputValue('');
-      
-      // Reset textarea height
-      if (textareaRef.current) {
-        textareaRef.current.style.height = 'auto';
+      // If we don't have a current chat, create one first
+      if (!currentChatId) {
+        createChat();
       }
+      
+      // Use a setTimeout to ensure the chat has been created
+      setTimeout(() => {
+        sendMessage(inputValue);
+        setInputValue('');
+        
+        // Reset textarea height
+        if (textareaRef.current) {
+          textareaRef.current.style.height = 'auto';
+        }
+      }, 0);
     }
   };
 
