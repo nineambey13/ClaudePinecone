@@ -1,10 +1,11 @@
-
 import { createContext, useContext, useState, ReactNode } from 'react';
 
 type UserProfile = {
   name: string;
   email: string;
   avatarUrl?: string;
+  initials?: string;
+  role?: string;
 };
 
 type Message = {
@@ -32,11 +33,15 @@ type ChatContextType = {
   sendMessage: (content: string) => void;
   toggleSidebar: () => void;
   setSidebarExpanded: (expanded: boolean) => void;
+  updateChatTitle?: (chatId: string, title: string) => void;
+  deleteChat?: (chatId: string) => void;
 };
 
 const dummyUserProfile: UserProfile = {
   name: 'Clarity',
   email: 'clarity@example.com',
+  initials: 'C',
+  role: 'Free Plan',
 };
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
@@ -61,7 +66,6 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
   const setCurrentChat = (chatId: string) => {
     setCurrentChatId(chatId);
     
-    // If we're selecting a chat, make sure sidebar is expanded
     if (chatId) {
       setSidebarExpanded(true);
     }
@@ -84,7 +88,6 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const sendMessage = (content: string) => {
-    // If there's no current chat, create one
     if (!currentChatId) {
       const newChatId = createChat();
       setTimeout(() => {
@@ -96,7 +99,6 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const addMessagesToChat = (chatId: string, content: string) => {
-    // Create user message
     const userMessage: Message = {
       id: `user-${Date.now()}`,
       role: 'user',
@@ -104,7 +106,6 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
       timestamp: new Date(),
     };
 
-    // Placeholder for assistant response
     const assistantMessage: Message = {
       id: `assistant-${Date.now() + 100}`,
       role: 'assistant',
@@ -115,24 +116,40 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     setChats((prevChats) =>
       prevChats.map((chat) => {
         if (chat.id === chatId) {
-          // Update chat title based on first message
           const updatedChat = {
             ...chat,
             messages: [...chat.messages, userMessage, assistantMessage],
           };
-          
-          // If this is the first message, update the title
+
           if (chat.messages.length === 0) {
             updatedChat.title = content.length > 30 
               ? `${content.substring(0, 30)}...` 
               : content;
           }
-          
+
           return updatedChat;
         }
         return chat;
       })
     );
+  };
+
+  const updateChatTitle = (chatId: string, title: string) => {
+    setChats((prevChats) =>
+      prevChats.map((chat) => {
+        if (chat.id === chatId) {
+          return { ...chat, title };
+        }
+        return chat;
+      })
+    );
+  };
+
+  const deleteChat = (chatId: string) => {
+    setChats((prevChats) => prevChats.filter((chat) => chat.id !== chatId));
+    if (currentChatId === chatId) {
+      setCurrentChatId('');
+    }
   };
 
   const value: ChatContextType = {
@@ -145,6 +162,8 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     sendMessage,
     toggleSidebar,
     setSidebarExpanded,
+    updateChatTitle,
+    deleteChat,
   };
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;
