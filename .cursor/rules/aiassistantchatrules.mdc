@@ -1,0 +1,17 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+I'm building an AI assistant chat app with Claude API and Pinecone integration. For this project:
+
+1. Focus on providing architecture guidance and implementation strategies, not writing the entire app
+2. Prioritize correctness over clever solutions
+3. When suggesting code for API integrations, be explicit about error handling and edge cases
+4. For UI components, follow a mobile-first approach since this needs to be responsive
+5. Consider data privacy best practices when handling chat storage and retrieval
+6. Always provide context for why you're suggesting a particular approach
+7. When I ask about specific errors or issues, help me understand the problem before suggesting solutions
+
+
+This project is for personal use only and needs to handle Claude API integration, Pinecone vector storage, chat history management, and responsive UI similar to Claude's official interfaces.

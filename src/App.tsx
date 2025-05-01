@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -11,6 +10,13 @@ import ChatHistoryPage from "./pages/ChatHistoryPage";
 import SettingsPage from "./pages/SettingsPage";
 import LogoutPage from "./pages/LogoutPage";
 import NotFound from "./pages/NotFound";
+import TestApiPage from "./pages/TestApiPage";
+import DownloadQueuePage from "./pages/DownloadQueuePage";
+import TestMobileInputPage from "./pages/TestMobileInputPage";
+import PineconeMobileTest from "./pages/PineconeMobileTest";
+import PineconeMobileTest1 from "./pages/PineconeMobileTest1";
+import KnowledgeBasePage from "./pages/KnowledgeBasePage";
+import { ChatProvider } from './contexts/ChatContext';
 
 const queryClient = new QueryClient();
 
@@ -19,16 +25,24 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
+      <ChatProvider>
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<MainLayout><HomePage /></MainLayout>} />
           <Route path="/chat/:id" element={<MainLayout><ChatPage /></MainLayout>} />
           <Route path="/chats" element={<MainLayout><ChatHistoryPage /></MainLayout>} />
+            <Route path="/knowledge" element={<MainLayout><KnowledgeBasePage /></MainLayout>} />
           <Route path="/settings" element={<MainLayout><SettingsPage /></MainLayout>} />
+          <Route path="/downloads" element={<MainLayout><DownloadQueuePage /></MainLayout>} />
+          <Route path="/test-api" element={<MainLayout><TestApiPage /></MainLayout>} />
+          <Route path="/testmobile" element={<TestMobileInputPage />} />
+          <Route path="/pineconemobiletest" element={<PineconeMobileTest />} />
+          <Route path="/pineconemobiletest1" element={<PineconeMobileTest1 />} />
           <Route path="/logout" element={<LogoutPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
+      </ChatProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );

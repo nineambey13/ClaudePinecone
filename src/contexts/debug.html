@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Chat Sync Debugger</title>
+  <style>
+    body { font-family: sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+    button { padding: 8px 16px; margin: 10px 0; }
+    pre { background: #f0f0f0; padding: 10px; overflow: auto; max-height: 300px; }
+  </style>
+</head>
+<body>
+  <h1>Chat Sync Debugger</h1>
+  
+  <button onclick="debugLocalStorage()">Inspect localStorage</button>
+  <pre id="storage-output"></pre>
+  
+  <button onclick="testCreateChat()">Test Create Chat</button>
+  <pre id="create-output"></pre>
+  
+  <script>
+    function debugLocalStorage() {
+      const output = document.getElementById('storage-output');
+      const chats = localStorage.getItem('chats');
+      output.textContent = `Chats in localStorage: ${chats ? JSON.stringify(JSON.parse(chats), null, 2) : 'None'}`;
+    }
+    
+    function testCreateChat() {
+      const output = document.getElementById('create-output');
+      
+      // Create a test chat and save to localStorage
+      const chatId = Date.now().toString();
+      const newChat = {
+        id: chatId,
+        title: 'Test Chat',
+        messages: [],
+        createdAt: new Date()
+      };
+      
+      // Get existing chats
+      let chats = [];
+      try {
+        const saved = localStorage.getItem('chats');
+        if (saved) {
+          chats = JSON.parse(saved);
+        }
+      } catch (e) {
+        output.textContent = `Error loading chats: ${e.message}`;
+        return;
+      }
+      
+      // Add new chat and save
+      chats = [newChat, ...chats];
+      localStorage.setItem('chats', JSON.stringify(chats));
+      localStorage.setItem('currentChatId', chatId);
+      
+      output.textContent = `Created test chat with ID ${chatId}. Total chats: ${chats.length}`;
+    }
+  </script>
+</body>
+</html>
