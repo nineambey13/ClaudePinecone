@@ -13,29 +13,29 @@ const getEnvVar = (key: string): string => {
   return process.env[key] || '';
 };
 
-// Log environment variables for debugging
+// Log environment variables for debugging (without API keys for security)
 console.log('Environment variables:', {
-  VITE_CLAUDE_API_KEY: getEnvVar('VITE_CLAUDE_API_KEY'),
   VITE_CLAUDE_MODEL: getEnvVar('VITE_CLAUDE_MODEL'),
-  VITE_PINECONE_API_KEY: getEnvVar('VITE_PINECONE_API_KEY'),
   VITE_PINECONE_ENVIRONMENT: getEnvVar('VITE_PINECONE_ENVIRONMENT'),
   VITE_PINECONE_INDEX: getEnvVar('VITE_PINECONE_INDEX'),
   VITE_SUPABASE_URL: getEnvVar('VITE_SUPABASE_URL'),
-  VITE_SUPABASE_ANON_KEY: getEnvVar('VITE_SUPABASE_ANON_KEY')
+  VITE_API_PROXY_URL: getEnvVar('VITE_API_PROXY_URL') || 'http://localhost:3001'
 });
 
 export const config = {
   claude: {
-    apiKey: getEnvVar('VITE_CLAUDE_API_KEY'),
-    model: getEnvVar('VITE_CLAUDE_MODEL') || 'claude-3-7-sonnet-20250219'
+    model: getEnvVar('VITE_CLAUDE_MODEL') || 'claude-3-7-sonnet-20250219',
+    useProxy: true // Always use the proxy to hide API keys
   },
   pinecone: {
-    apiKey: getEnvVar('VITE_PINECONE_API_KEY'),
-    environment: getEnvVar('VITE_PINECONE_ENVIRONMENT'),
-    index: getEnvVar('VITE_PINECONE_INDEX')
+    index: getEnvVar('VITE_PINECONE_INDEX') || 'clarity-opensource',
+    useProxy: true // Always use the proxy to hide API keys
   },
   supabase: {
     url: getEnvVar('VITE_SUPABASE_URL'),
     anonKey: getEnvVar('VITE_SUPABASE_ANON_KEY')
+  },
+  api: {
+    proxyUrl: getEnvVar('VITE_API_PROXY_URL') || 'http://localhost:3001'
   }
-}; 
+};

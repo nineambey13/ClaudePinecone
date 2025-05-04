@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 import TestMobileInputPage from './TestMobileInputPage';
 
 const HomePage = () => {
-  const { setCurrentChat } = useChatContext();
+  const { setCurrentChat, sendMessage } = useChatContext();
   const isMobile = useIsMobile();
 
   // Clear current chat when coming to home page
@@ -38,3 +38,4 @@ const HomePage = () => {
 };
 
 export default HomePage;
+

@@ -28,3 +28,11 @@ dist-ssr
 .env.local
 .env.development
 .env.production
+src/server/.env
+src/pages/.env
+
+# Vercel
+.vercel
+
+# Pinecone
+pinecone-structure.json

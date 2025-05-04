@@ -1,11 +1,13 @@
 import React, { createContext, useContext, useState, ReactNode, useCallback, useEffect } from 'react';
-import { Anthropic } from '@anthropic-ai/sdk';
-import { ClaudeApi } from '../lib/api/claude';
+import { ClaudeProxyApi } from '../lib/api/claudeProxy';
 import { config } from '../lib/config';
 import { QueuedMessage } from '@/components/ui/DownloadQueue';
 import { jsPDF } from 'jspdf';
 import { chatService } from '@/lib/services/chatService';
 import { v4 as uuidv4 } from 'uuid';
+import { searchKnowledgeBase } from '@/lib/enhancedKnowledgeStorage';
+import { isPineconeConfigured } from '@/lib/pineconeUtils';
+import { isEmbeddingConfigured } from '@/lib/claudeApi';
 
 export type Message = {
   id: string;
@@ -14,6 +16,8 @@ export type Message = {
   timestamp: Date;
   edited?: boolean;
   isLoading?: boolean;
+  relatedKnowledge?: any[]; // Store related Pinecone entries
+  usedStoredKnowledge?: boolean; // Flag to indicate if Claude used knowledge from Pinecone
 };
 
 export type Chat = {
@@ -93,11 +97,9 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const saved = localStorage.getItem('prePromptsEnabled');
     return saved ? JSON.parse(saved) : true;
   });
-  
-  const claudeApi = new ClaudeApi(
-    config.claude.apiKey,
-    config.claude.model || 'claude-3-7-sonnet-20250219'
-  );
+
+  // Initialize Claude API with proxy
+  const claudeApi = new ClaudeProxyApi(config.claude.model);
 
   // Fetch chats from Supabase on initial load
   useEffect(() => {
@@ -113,7 +115,7 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const unsubscribe = chatService.subscribeToChanges((updatedChats) => {
       setChats(updatedChats);
     });
-    
+
     return () => {
       unsubscribe();
     };
@@ -122,20 +124,20 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const createChat = () => {
     // Delete any existing empty chats
     setChats((prevChats) => prevChats.filter((chat) => chat.messages.length > 0));
-    
+
     // Generate a proper UUID for the new chat
     const chatId = uuidv4();
-    
+
     const newChat: Chat = {
       id: chatId,
       title: 'New Chat',
       messages: [],
       createdAt: new Date(),
     };
-    
+
     // Save to Supabase
     chatService.createChat(newChat);
-    
+
     setChats((prevChats) => [newChat, ...prevChats]);
     setCurrentChatId(newChat.id);
     return newChat.id;
@@ -144,7 +146,7 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const updateChatTitle = (chatId: string, title: string) => {
     // Update in Supabase
     chatService.updateChatTitle(chatId, title);
-    
+
     setChats((prevChats) =>
       prevChats.map((chat) =>
         chat.id === chatId ? { ...chat, title } : chat
@@ -155,9 +157,9 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const deleteChat = (chatId: string) => {
     // Delete from Supabase
     chatService.deleteChat(chatId);
-    
+
     setChats((prevChats) => prevChats.filter((chat) => chat.id !== chatId));
-    
+
     // If the deleted chat is the current one, clear the current chat
     if (currentChatId === chatId) {
       setCurrentChatId(null);
@@ -169,27 +171,27 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       abortController.abort();
       setAbortController(null);
       setIsLoading(false);
-      
+
       // Update the loading state of the last assistant message
       if (currentChatId) {
         setChats((prevChats) =>
           prevChats.map((chat) => {
             if (chat.id === currentChatId) {
               const updatedMessages = [...chat.messages];
-              
+
               // Find the last loading assistant message
               const lastLoadingIndex = updatedMessages
                 .map((msg, i) => ({ msg, i }))
                 .filter(({ msg }) => msg.role === 'assistant' && msg.isLoading)
                 .pop()?.i;
-              
+
               if (lastLoadingIndex !== undefined) {
                 updatedMessages[lastLoadingIndex] = {
                   ...updatedMessages[lastLoadingIndex],
                   isLoading: false
                 };
               }
-              
+
               return {
                 ...chat,
                 messages: updatedMessages
@@ -222,11 +224,11 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     if (abortController) {
       abortController.abort();
     }
-    
+
     // Create a new abort controller for this request
     const controller = new AbortController();
     setAbortController(controller);
-    
+
     // Generate a proper UUID for the user message
     const userMessage: Message = {
       id: `user-${uuidv4()}`,
@@ -272,10 +274,10 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           // If this is the first message, update the chat title
           if (chat.messages.length === 0) {
             const title = content.slice(0, 50) + (content.length > 50 ? '...' : '');
-            
+
             // Update chat title in Supabase
             chatService.updateChatTitle(chatId, title);
-            
+
             return {
               ...chat,
               title,
@@ -294,18 +296,152 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setIsLoading(true);
 
     try {
+      // Check if Pinecone search is available
+      console.log('🔍 Checking Pinecone configuration...');
+      const isPineconeConfig = isPineconeConfigured();
+      const isEmbeddingConfig = isEmbeddingConfigured();
+      console.log('📊 Pinecone configured:', isPineconeConfig);
+      console.log('🔤 Embedding API configured:', isEmbeddingConfig);
+
+      const canUseVectorSearch = isPineconeConfig && isEmbeddingConfig;
+      console.log('🔎 Can use vector search:', canUseVectorSearch);
+
+      let relatedKnowledge = [];
+      let enhancedPrompt = content;
+
+      // Search Pinecone for relevant knowledge if available
+      if (canUseVectorSearch) {
+        try {
+          console.log('🔍 Searching Pinecone for relevant knowledge...');
+          console.log('🔍 Query:', content);
+          relatedKnowledge = await searchKnowledgeBase(content, true);
+
+          // If we found relevant knowledge, enhance the prompt with it
+          if (relatedKnowledge && relatedKnowledge.length > 0) {
+            console.log(`✅ Found ${relatedKnowledge.length} relevant entries in Pinecone`);
+
+            // Log the found entries
+            relatedKnowledge.forEach((entry, index) => {
+              console.log(`📄 Entry ${index + 1}:`);
+              console.log(`   Title: ${entry.metadata.title}`);
+              console.log(`   Type: ${entry.metadata.type}`);
+              console.log(`   Tags: ${entry.metadata.tags.join(', ')}`);
+              console.log(`   Content: ${entry.content.substring(0, 100)}...`);
+            });
+
+            // Add a visual indicator that we're using Pinecone data
+            console.log('🔍 Adding visual indicator for Pinecone data usage');
+
+            // Set the usedStoredKnowledge flag on the assistant message
+            setChats((prevChats) =>
+              prevChats.map((chat) => {
+                if (chat.id === chatId) {
+                  return {
+                    ...chat,
+                    messages: chat.messages.map((msg) => {
+                      if (msg.id === assistantMessageId) {
+                        return {
+                          ...msg,
+                          usedStoredKnowledge: true
+                        };
+                      }
+                      return msg;
+                    }),
+                  };
+                }
+                return chat;
+              })
+            );
+
+            // Format the knowledge to include in the prompt - improved format for better Claude understanding
+            let knowledgeContext = "\n\n<knowledge_base>\n";
+
+            // Log the knowledge entries for debugging
+            console.log(`🔍 Formatting ${relatedKnowledge.length} knowledge entries for Claude`);
+
+            relatedKnowledge.forEach((entry, index) => {
+              // Log each entry for debugging
+              console.log(`🔍 Entry ${index + 1}:`);
+              console.log(`   Title: ${entry.metadata.title}`);
+              console.log(`   Content length: ${entry.content?.length || 0} characters`);
+              console.log(`   Tags: ${entry.metadata.tags?.join(', ') || 'none'}`);
+
+              // Ensure the entry has valid content
+              const title = entry.metadata.title?.trim() || `Entry ${index + 1}`;
+              const content = entry.content?.trim() || `No content available for entry ${index + 1}`;
+
+              knowledgeContext += `\n<entry id="${index + 1}">\n`;
+              knowledgeContext += `<title>${title}</title>\n`;
+              knowledgeContext += `<content>${content}</content>\n`;
+              knowledgeContext += `</entry>\n`;
+            });
+
+            knowledgeContext += "\n</knowledge_base>\n\nI've provided information from my knowledge base above. This information is HIGHLY RELEVANT to the user's question. Please use this information to enhance your understanding of the context and provide a detailed, accurate response.\n\nDo not mention that you're using the knowledge base unless it's necessary to cite a specific fact or detail. Focus on providing a natural, conversational response that incorporates the knowledge seamlessly.\n\nUser's question: ";
+
+            // Add the knowledge context to the user's message
+            enhancedPrompt = knowledgeContext + content;
+
+            // Update the user message with related knowledge
+            userMessage.relatedKnowledge = relatedKnowledge;
+            assistantMessage.usedStoredKnowledge = true;
+
+            console.log('🔍 Setting usedStoredKnowledge flag to true for assistant message');
+
+            // Update the user message in state to show it has related knowledge
+            setChats((prevChats) =>
+              prevChats.map((chat) => {
+                if (chat.id === chatId) {
+                  return {
+                    ...chat,
+                    messages: chat.messages.map((msg) => {
+                      if (msg.id === userMessage.id) {
+                        return {
+                          ...msg,
+                          relatedKnowledge
+                        };
+                      }
+                      return msg;
+                    }),
+                  };
+                }
+                return chat;
+              })
+            );
+          }
+        } catch (searchError) {
+          console.error('Error searching Pinecone:', searchError);
+        }
+      }
+
       // Prepare the messages for the API
-      const apiMessages = messages.map(msg => ({
-        role: msg.role,
-        content: msg.content
-      }));
+      const apiMessages = messages.map(msg => {
+        // If this is the user message and we have enhanced it with knowledge context
+        if (msg.id === userMessage.id && enhancedPrompt !== content) {
+          console.log('🔍 Using enhanced prompt with knowledge context');
+          // Log the first 200 characters of the enhanced prompt for debugging
+          console.log('🔍 Enhanced prompt preview:', enhancedPrompt.substring(0, 200) + '...');
+          return {
+            role: msg.role,
+            content: enhancedPrompt
+          };
+        }
+        return {
+          role: msg.role,
+          content: msg.content
+        };
+      });
+
+      // Log the number of messages being sent to Claude
+      console.log(`🔍 Sending ${apiMessages.length} messages to Claude`);
 
       // Use streaming for a better user experience
       let fullResponse = '';
-      
+
       await claudeApi.streamChat(
         {
-          messages: apiMessages
+          messages: apiMessages,
+          system: "You are Claude, an AI assistant by Anthropic. When provided with information from a knowledge base in the user's message, you MUST use it to enhance your responses. The knowledge base contains highly relevant information to answer the user's question. Incorporate this information naturally into your response. Only mention the knowledge base explicitly if you need to cite specific facts or details.",
+          temperature: 0.7
         },
         (chunk) => {
           // Update the assistant's message with the new chunk
@@ -320,7 +456,8 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                       return {
                         ...msg,
                         content: fullResponse,
-                        isLoading: true
+                        isLoading: true,
+                        usedStoredKnowledge: assistantMessage.usedStoredKnowledge
                       };
                     }
                     return msg;
@@ -362,15 +499,20 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setChats((prevChats) =>
         prevChats.map((chat) => {
           if (chat.id === chatId) {
+            // Find the current state of the assistant message to preserve usedStoredKnowledge
+            const currentAssistantMessage = chat.messages.find(msg => msg.id === assistantMessageId);
+            const usedKnowledge = currentAssistantMessage?.usedStoredKnowledge || false;
+
             const finalAssistantMessage = {
               ...assistantMessage,
               content: fullResponse,
-              isLoading: false
+              isLoading: false,
+              usedStoredKnowledge: usedKnowledge
             };
-            
+
             // Save assistant message to Supabase
             chatService.sendMessage(finalAssistantMessage, chatId);
-            
+
             return {
               ...chat,
               messages: chat.messages.map((msg) => {
@@ -386,22 +528,27 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       );
     } catch (error) {
       console.error('Error in addMessagesToChat:', error);
-      
+
       // Update the assistant's message with the error
       const errorMessage = error instanceof Error ? error.message : 'An error occurred while processing your request. Please try again.';
-      
+
       setChats((prevChats) =>
         prevChats.map((chat) => {
           if (chat.id === chatId) {
+            // Find the current state of the assistant message to preserve usedStoredKnowledge
+            const currentAssistantMessage = chat.messages.find(msg => msg.id === assistantMessageId);
+            const usedKnowledge = currentAssistantMessage?.usedStoredKnowledge || false;
+
             const errorAssistantMessage = {
               ...assistantMessage,
               content: errorMessage,
-              isLoading: false
+              isLoading: false,
+              usedStoredKnowledge: usedKnowledge
             };
-            
+
             // Save error message to Supabase
             chatService.sendMessage(errorAssistantMessage, chatId);
-            
+
             return {
               ...chat,
               messages: chat.messages.map((msg) => {
@@ -425,7 +572,7 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     // First toggle the sidebar state
     setSidebarExpanded((prev) => {
       const newState = !prev;
-      
+
       // Set showRightArrow based on new sidebar state
       if (!newState) {
         // When closing sidebar, show right arrow
@@ -434,7 +581,7 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         // When opening sidebar, hide right arrow
         setShowRightArrow(false);
       }
-      
+
       return newState;
     });
   };
@@ -452,7 +599,7 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     if (abortController) {
       abortController.abort();
     }
-    
+
     // Create a new abort controller for this request
     const controller = new AbortController();
     setAbortController(controller);
@@ -460,7 +607,7 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     // Find the original message first
     const currentChat = chats.find(chat => chat.id === currentChatId);
     if (!currentChat) return;
-    
+
     const originalMessage = currentChat.messages.find(msg => msg.id === messageId);
     if (!originalMessage) return;
 
@@ -540,10 +687,12 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       // Use streaming for a better user experience
       let fullResponse = '';
-      
+
       await claudeApi.streamChat(
         {
-          messages: apiMessages
+          messages: apiMessages,
+          system: "You are Claude, an AI assistant by Anthropic. When provided with information from a knowledge base in the user's message, you MUST use it to enhance your responses. The knowledge base contains highly relevant information to answer the user's question. Incorporate this information naturally into your response. Only mention the knowledge base explicitly if you need to cite specific facts or details.",
+          temperature: 0.7
         },
         (chunk) => {
           // Update the assistant's message with the new chunk
@@ -605,10 +754,10 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
               content: fullResponse,
               isLoading: false
             };
-            
+
             // Save assistant message to Supabase
             chatService.sendMessage(finalAssistantMessage, currentChatId);
-            
+
             return {
               ...chat,
               messages: chat.messages.map((msg) => {
@@ -624,10 +773,10 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       );
     } catch (error) {
       console.error('Error in updateMessage:', error);
-      
+
       // Update the assistant's message with the error
       const errorMessage = error instanceof Error ? error.message : 'An error occurred while processing your request. Please try again.';
-      
+
       setChats((prevChats) =>
         prevChats.map((chat) => {
           if (chat.id === currentChatId) {
@@ -636,10 +785,10 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
               content: errorMessage,
               isLoading: false
             };
-            
+
             // Save error message to Supabase
             chatService.sendMessage(errorAssistantMessage, currentChatId);
-            
+
             return {
               ...chat,
               messages: chat.messages.map((msg) => {
@@ -661,19 +810,19 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const deleteMessage = (messageId: string) => {
     if (!currentChatId) return;
-    
+
     const currentChat = chats.find(chat => chat.id === currentChatId);
     if (!currentChat) return;
-    
+
     // Find the index of the message to delete
     const messageIndex = currentChat.messages.findIndex(msg => msg.id === messageId);
     if (messageIndex === -1) return;
-    
+
     // Create a new array of messages without the deleted message and any messages after it
     const updatedMessages = currentChat.messages.slice(0, messageIndex);
-    
+
     // Update the chat with the new messages
-    setChats(prevChats => 
+    setChats(prevChats =>
       prevChats.map(chat => {
         if (chat.id === currentChatId) {
           return {
@@ -684,14 +833,14 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         return chat;
       })
     );
-    
+
     // Delete message and all subsequent messages from Supabase
-    // This is a bit tricky with the current structure, so we'll handle it by 
+    // This is a bit tricky with the current structure, so we'll handle it by
     // first deleting all messages for the chat and then re-inserting the kept ones
     chatService.deleteChat(currentChatId).then(() => {
       // Re-create the chat
       chatService.createChat(currentChat);
-      
+
       // Re-insert all remaining messages
       for (const message of updatedMessages) {
         chatService.sendMessage(message, currentChatId);
@@ -701,31 +850,31 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const regenerateMessage = async (messageId: string) => {
     if (!currentChatId) return;
-    
+
     // Cancel any ongoing generation
     if (abortController) {
       abortController.abort();
     }
-    
+
     // Create a new abort controller for this request
     const controller = new AbortController();
     setAbortController(controller);
-    
+
     const currentChat = chats.find(chat => chat.id === currentChatId);
     if (!currentChat) return;
-    
+
     // Find the index of the message to regenerate
     const messageIndex = currentChat.messages.findIndex(msg => msg.id === messageId);
     if (messageIndex === -1) return;
-    
+
     // Make sure it's an assistant message
     if (currentChat.messages[messageIndex].role !== 'assistant') return;
-    
+
     // Keep messages up to the previous message (the user prompt)
     const keptMessages = currentChat.messages.slice(0, messageIndex);
-    
+
     // Update the chat with just the kept messages
-    setChats(prevChats => 
+    setChats(prevChats =>
       prevChats.map(chat => {
         if (chat.id === currentChatId) {
           return {
@@ -746,9 +895,9 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       timestamp: new Date(),
       isLoading: true
     };
-    
+
     // Add the assistant message placeholder
-    setChats(prevChats => 
+    setChats(prevChats =>
       prevChats.map(chat => {
         if (chat.id === currentChatId) {
           return {
@@ -759,22 +908,24 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         return chat;
       })
     );
-    
+
     setIsLoading(true);
-    
+
     try {
       // Prepare the messages for the API
       const apiMessages = keptMessages.map(msg => ({
         role: msg.role,
         content: msg.content
       }));
-      
+
       // Use streaming for a better user experience
       let fullResponse = '';
-      
+
       await claudeApi.streamChat(
         {
-          messages: apiMessages
+          messages: apiMessages,
+          system: "You are Claude, an AI assistant by Anthropic. When provided with information from a knowledge base in the user's message, you MUST use it to enhance your responses. The knowledge base contains highly relevant information to answer the user's question. Incorporate this information naturally into your response. Only mention the knowledge base explicitly if you need to cite specific facts or details.",
+          temperature: 0.7
         },
         (chunk) => {
           // Update the assistant's message with the new chunk
@@ -836,10 +987,10 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
               content: fullResponse,
               isLoading: false
             };
-            
+
             // Save assistant message to Supabase
             chatService.sendMessage(finalAssistantMessage, currentChatId);
-            
+
             return {
               ...chat,
               messages: chat.messages.map((msg) => {
@@ -855,10 +1006,10 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       );
     } catch (error) {
       console.error('Error in regenerateMessage:', error);
-      
+
       // Update the assistant's message with the error
       const errorMessage = error instanceof Error ? error.message : 'An error occurred while processing your request. Please try again.';
-      
+
       setChats((prevChats) =>
         prevChats.map((chat) => {
           if (chat.id === currentChatId) {
@@ -867,10 +1018,10 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
               content: errorMessage,
               isLoading: false
             };
-            
+
             // Save error message to Supabase
             chatService.sendMessage(errorAssistantMessage, currentChatId);
-            
+
             return {
               ...chat,
               messages: chat.messages.map((msg) => {
@@ -907,7 +1058,7 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const updatePrePrompt = (id: string, prompt: Omit<PrePrompt, 'id'>) => {
-    const updatedPrompts = prePrompts.map(p => 
+    const updatedPrompts = prePrompts.map(p =>
       p.id === id ? { ...prompt, id } : p
     );
     setPrePrompts(updatedPrompts);
@@ -967,7 +1118,7 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     URL.revokeObjectURL(url);
 
     setDownloadQueue(prev => {
-      const newQueue = prev.map(item => 
+      const newQueue = prev.map(item =>
         item.id === messageId ? { ...item, downloaded: true } : item
       );
       localStorage.setItem('downloadQueue', JSON.stringify(newQueue));
@@ -979,7 +1130,7 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const doc = new jsPDF();
     let y = 10;
 
-    downloadQueue.forEach((item, index) => {
+    downloadQueue.forEach((item) => {
       const message = chats.flatMap(chat => chat.messages).find(msg => msg.id === item.id);
       if (!message) return;
 

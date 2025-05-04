@@ -36,7 +36,7 @@ export const ChatInput = ({ className }: ChatInputProps) => {
   const [selectedPrePrompt, setSelectedPrePrompt] = useState<string>('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [isUploadMenuOpen, setIsUploadMenuOpen] = useState(false);
-  const [selectedModel, setSelectedModel] = useState('Claude 3.5 Sonnet');
+  const [selectedModel, setSelectedModel] = useState('Claude 3.5 Haiku');
   const [isPineconeModalOpen, setIsPineconeModalOpen] = useState(false);
   const [upsertTitle, setUpsertTitle] = useState('');
   const [upsertContent, setUpsertContent] = useState('');
@@ -62,13 +62,14 @@ export const ChatInput = ({ className }: ChatInputProps) => {
 
   const models: Model[] = [
     {
-      name: 'Claude 3.5 Sonnet',
-      description: 'Most capable model for complex tasks'
-    },
-    {
       name: 'Claude 3.5 Haiku',
       description: 'Fast and efficient for simple tasks'
     },
+    {
+      name: 'Claude 3.7 Sonnet',
+      description: 'Most capable model for complex tasks'
+    },
+
   ];
 
   // Auto-resize textarea effect
@@ -376,9 +377,7 @@ export const ChatInput = ({ className }: ChatInputProps) => {
                         <span className="font-medium">{model.name}</span>
                         {model.name === selectedModel && <span className="text-green-500">✓</span>}
                       </div>
-                      {model.description && (
-                        <span className="text-sm text-gray-500 mt-0.5">{model.description}</span>
-                      )}
+                      <span className="text-xs text-gray-500">{model.description}</span>
                     </DropdownMenuItem>
                   ))}
                 </DropdownMenuContent>
@@ -463,3 +462,9 @@ export const ChatInput = ({ className }: ChatInputProps) => {
     </form>
   );
 };
+
+
+
+
+
+

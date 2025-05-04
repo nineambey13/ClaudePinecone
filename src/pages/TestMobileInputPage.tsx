@@ -1,10 +1,10 @@
 import React, { useState, useRef, FormEvent, ChangeEvent, useEffect } from 'react';
-import { 
-  MessageCircle, Settings, Plus, ChevronDown, X, Paperclip, LogOut, 
+import {
+  MessageCircle, Settings, Plus, ChevronDown, X, Paperclip, LogOut,
   Database, StopCircle, Save, Edit
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { 
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -23,36 +23,36 @@ import { useNavigate } from 'react-router-dom';
 
 // Icons to be used inside the SidebarToggle component
 const SquareIcon = () => (
-  <svg 
-    width="18" 
-    height="18" 
-    viewBox="0 0 20 20" 
-    fill="currentColor" 
-    xmlns="http://www.w3.org/2000/svg" 
+  <svg
+    width="18"
+    height="18"
+    viewBox="0 0 20 20"
+    fill="currentColor"
+    xmlns="http://www.w3.org/2000/svg"
   >
     <path fillRule="evenodd" clipRule="evenodd" d="M2.5 3C1.67157 3 1 3.67157 1 4.5V15.5C1 16.3284 1.67157 17 2.5 17H17.5C18.3284 17 19 16.3284 19 15.5V4.5C19 3.67157 18.3284 3 17.5 3H2.5ZM2 4.5C2 4.22386 2.22386 4 2.5 4H6V16H2.5C2.22386 16 2 15.7761 2 15.5V4.5ZM7 16H17.5C17.7761 16 18 15.7761 18 15.5V4.5C18 4.22386 17.7761 4 17.5 4H7V16Z"></path>
   </svg>
 );
 
 const RightArrowIcon = () => (
-  <svg 
-    width="18" 
-    height="18" 
-    viewBox="0 0 20 20" 
-    fill="currentColor" 
-    xmlns="http://www.w3.org/2000/svg" 
+  <svg
+    width="18"
+    height="18"
+    viewBox="0 0 20 20"
+    fill="currentColor"
+    xmlns="http://www.w3.org/2000/svg"
   >
     <path fillRule="evenodd" clipRule="evenodd" d="M17.5 2C17.7761 2 18 2.22386 18 2.5V17.5C18 17.7761 17.7761 18 17.5 18C17.2239 18 17 17.7761 17 17.5V2.5C17 2.22386 17.2239 2 17.5 2ZM8.63003 4.66366C8.81578 4.45933 9.13201 4.44428 9.33634 4.63003L14.8363 9.63003C14.9406 9.72479 15 9.85913 15 10C15 10.1409 14.9406 10.2752 14.8363 10.37L9.33634 15.37C9.13201 15.5557 8.81578 15.5407 8.63003 15.3363C8.44428 15.132 8.45934 14.8158 8.66366 14.63L13.2067 10.5L2.5 10.5C2.22386 10.5 2 10.2761 2 10C2 9.72386 2.22386 9.5 2.5 9.5L13.2067 9.5L8.66366 5.36997C8.45934 5.18422 8.44428 4.86799 8.63003 4.66366Z"></path>
   </svg>
 );
 
 const LeftArrowIcon = () => (
-  <svg 
-    width="18" 
-    height="18" 
-    viewBox="0 0 20 20" 
-    fill="currentColor" 
-    xmlns="http://www.w3.org/2000/svg" 
+  <svg
+    width="18"
+    height="18"
+    viewBox="0 0 20 20"
+    fill="currentColor"
+    xmlns="http://www.w3.org/2000/svg"
   >
     <path fillRule="evenodd" clipRule="evenodd" d="M5 10C5 9.85913 5.05943 9.72479 5.16366 9.63003L10.6637 4.63003C10.868 4.44428 11.1842 4.45933 11.37 4.66366C11.5557 4.86799 11.5407 5.18422 11.3363 5.36997L6.7933 9.5L17.5 9.5C17.7761 9.5 18 9.72386 18 10C18 10.2761 17.7761 10.5 17.5 10.5L6.7933 10.5L11.3363 14.63C11.5407 14.8158 11.5557 15.132 11.37 15.3363C11.1842 15.5407 10.868 15.5557 10.6637 15.37L5.16366 10.37C5.05943 10.2752 5 10.1409 5 10Z"></path>
     <path fillRule="evenodd" clipRule="evenodd" d="M2.5 2C2.77614 2 3 2.22386 3 2.5L3 17.5C3 17.7761 2.77614 18 2.5 18C2.22385 18 2 17.7761 2 17.5L2 2.5C2 2.22386 2.22386 2 2.5 2Z"></path>
@@ -67,7 +67,7 @@ const SidebarToggle = ({ isOpen, wasOpen, onClick, className }: {
   className?: string;
 }) => {
   return (
-    <div 
+    <div
       id="sidebar-toggle"
       className={cn("w-7 h-7 flex items-center justify-center cursor-pointer", className)}
       onClick={onClick}
@@ -77,20 +77,20 @@ const SidebarToggle = ({ isOpen, wasOpen, onClick, className }: {
         {(isOpen || wasOpen) && (
           <div className="absolute inset-0 bg-gray-300/50 rounded-md"></div>
         )}
-        
+
         {!isOpen ? (
           <>
             {/* Square icon - visible by default when closed */}
             <div className={cn(
-              "absolute inset-0 flex items-center justify-center transition-opacity duration-200 ease-in-out", 
+              "absolute inset-0 flex items-center justify-center transition-opacity duration-200 ease-in-out",
               wasOpen ? "opacity-0" : "opacity-100"
             )}>
               <SquareIcon />
             </div>
-            
+
             {/* Right arrow - only visible after sidebar was closed */}
             <div className={cn(
-              "absolute inset-0 flex items-center justify-center transition-opacity duration-200 ease-in-out", 
+              "absolute inset-0 flex items-center justify-center transition-opacity duration-200 ease-in-out",
               wasOpen ? "opacity-100" : "opacity-0"
             )}>
               <RightArrowIcon />
@@ -135,26 +135,33 @@ interface Message {
 // Add new CSS in the component
 const mobileDropdownStyles = `
   .dropdown-content {
-    position: fixed;
-    z-index: 999;
+    position: fixed !important;
+    z-index: 999 !important;
   }
-  
+
   .touch-manipulation {
     touch-action: manipulation;
+  }
+
+  /* Ensure model dropdown is visible and properly positioned */
+  .model-dropdown {
+    transform: translateX(-20px) !important;
+    right: 0 !important;
+    left: auto !important;
   }
 `;
 
 const TestMobileInputPage: React.FC = () => {
-  const { 
-    chats, 
-    currentChatId, 
-    sendMessage: contextSendMessage, 
+  const {
+    chats,
+    currentChatId,
+    sendMessage: contextSendMessage,
     setCurrentChat,
     isLoading: contextIsLoading,
     stopGeneration: contextStopGeneration,
     userProfile: contextUserProfile
   } = useChatContext();
-  
+
   const navigate = useNavigate();
   const [isUploadMenuOpen, setIsUploadMenuOpen] = useState(false);
   const [selectedModel, setSelectedModel] = useState('Claude 3.7 Sonnet');
@@ -164,23 +171,23 @@ const TestMobileInputPage: React.FC = () => {
   const [showRightArrow, setShowRightArrow] = useState(false);
   // Using mock chats only when global chats aren't available
   const [isGenerating, setIsGenerating] = useState(false);
-  
+
   // Ref to store the generation interval ID so we can clear it when stopping
   const generationIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  
+
   // Get current chat from the context
   const currentChat = currentChatId ? chats.find(chat => chat.id === currentChatId) : null;
-  
+
   // Ref for message container to scroll to bottom
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  
+
   // Scroll to bottom when messages change
   useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [currentChat?.messages]);
-  
+
   // Reset showRightArrow on initial page load
   useEffect(() => {
     setShowRightArrow(false);
@@ -211,16 +218,12 @@ const TestMobileInputPage: React.FC = () => {
 
   const models = [
     {
-      name: 'Claude 3.7 Sonnet',
-      description: 'Our most intelligent model yet'
-    },
-    {
       name: 'Claude 3.5 Haiku',
       description: 'Fastest model for daily tasks'
     },
     {
-      name: 'Claude 3.5 Sonnet',
-      description: ''
+      name: 'Claude 3.7 Sonnet',
+      description: 'Our most intelligent model yet'
     }
   ];
 
@@ -248,14 +251,14 @@ const TestMobileInputPage: React.FC = () => {
     toggleSidebar();
     navigate(`/chat/${chatId}`);
   };
-  
+
   // Send a message using the context's sendMessage
   const sendMessage = () => {
     if (!inputValue.trim() || contextIsLoading) return;
-    
+
     const chatId = contextSendMessage(inputValue);
     setInputValue('');
-    
+
     if (window.location.pathname === '/') {
       navigate(`/chat/${chatId}`);
     }
@@ -265,7 +268,7 @@ const TestMobileInputPage: React.FC = () => {
   const stopGeneration = () => {
     contextStopGeneration();
   };
-  
+
   // Check if there are messages in the current chat
   const hasMessages = currentChat && currentChat.messages.length > 0;
 
@@ -279,7 +282,7 @@ const TestMobileInputPage: React.FC = () => {
 
   // Refs for file uploads
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
+
   // File upload state
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isFileUploading, setIsFileUploading] = useState(false);
@@ -299,7 +302,7 @@ const TestMobileInputPage: React.FC = () => {
     const handleTouchOutside = (e: TouchEvent) => {
       const element = e.target as Node;
       const dropdownButtons = document.querySelectorAll('.dropdown-trigger');
-      
+
       // Close dropdowns when touching outside
       let clickedInsideDropdown = false;
       dropdownButtons.forEach(button => {
@@ -307,12 +310,13 @@ const TestMobileInputPage: React.FC = () => {
           clickedInsideDropdown = true;
         }
       });
-      
+
       if (!clickedInsideDropdown) {
         setIsUploadMenuOpen(false);
+        // Don't close model menu here - it's handled by the DropdownMenu component
       }
     };
-    
+
     document.addEventListener('touchstart', handleTouchOutside);
     return () => {
       document.removeEventListener('touchstart', handleTouchOutside);
@@ -321,11 +325,11 @@ const TestMobileInputPage: React.FC = () => {
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
-    
+
     if (!file) return;
-    
+
     setSelectedFile(file);
-    
+
     // Create a preview URL for images
     if (file.type.startsWith('image/')) {
       const reader = new FileReader();
@@ -336,26 +340,26 @@ const TestMobileInputPage: React.FC = () => {
     } else {
       setFilePreviewUrl(null);
     }
-    
+
     // Mock file upload process
     mockFileUpload(file);
   };
-  
+
   const mockFileUpload = (file: File) => {
     setIsFileUploading(true);
     setUploadProgress(0);
-    
+
     const totalSteps = 10;
     let currentStep = 0;
-    
+
     const interval = setInterval(() => {
       currentStep++;
       setUploadProgress(Math.round((currentStep / totalSteps) * 100));
-      
+
       if (currentStep === totalSteps) {
         clearInterval(interval);
         setIsFileUploading(false);
-        
+
         // Add message about the uploaded file
         const content = `Uploaded file: ${file.name} (${(file.size / 1024).toFixed(2)} KB)`;
         const userMessage: Message = {
@@ -364,17 +368,17 @@ const TestMobileInputPage: React.FC = () => {
           role: 'user',
           createdAt: new Date()
         };
-        
+
         addMessageAndGenerateResponse(userMessage);
       }
     }, 300);
   };
-  
+
   // Helper function to add message and generate response
   const addMessageAndGenerateResponse = (userMessage: Message) => {
     let updatedChats = [...chats];
     let chatToUpdate;
-    
+
     // If no current chat, create a new one
     if (!currentChatId) {
       const newChat = {
@@ -383,7 +387,7 @@ const TestMobileInputPage: React.FC = () => {
         messages: [userMessage],
         createdAt: new Date()
       };
-      
+
       updatedChats = [newChat, ...updatedChats];
       setCurrentChat(newChat.id);
       chatToUpdate = newChat;
@@ -394,9 +398,9 @@ const TestMobileInputPage: React.FC = () => {
         chatToUpdate.messages = [...chatToUpdate.messages, userMessage];
       }
     }
-    
+
     setCurrentChat(chatToUpdate.id);
-    
+
     // Generate AI response
     generateResponse(chatToUpdate);
   };
@@ -424,27 +428,27 @@ const TestMobileInputPage: React.FC = () => {
       const element = e.target as Node;
       const dropdownTriggers = document.querySelectorAll('.dropdown-trigger');
       const dropdownContents = document.querySelectorAll('.dropdown-content');
-      
+
       // Check if touch is outside both triggers and content
       let insideDropdown = false;
-      
+
       dropdownTriggers.forEach(trigger => {
         if (trigger.contains(element)) {
           insideDropdown = true;
         }
       });
-      
+
       dropdownContents.forEach(content => {
         if (content.contains(element)) {
           insideDropdown = true;
         }
       });
-      
+
       if (!insideDropdown) {
         closeAllMenus();
       }
     };
-    
+
     document.addEventListener('touchstart', handleDocumentTouchStart);
     return () => {
       document.removeEventListener('touchstart', handleDocumentTouchStart);
@@ -494,19 +498,19 @@ const TestMobileInputPage: React.FC = () => {
   const handleSaveToKnowledgeBase = (message: Message) => {
     setIsUploadMenuOpen(false);
     setIsPineconeUpsertOpen(true);
-    
+
     // If there's a current chat, use the last message as default content
     if (currentChat && currentChat.messages.length > 0) {
       const lastMessage = currentChat.messages[currentChat.messages.length - 1];
       setUpsertContent(lastMessage.content);
-      
+
       // Generate a default title from the message content
       const firstLine = lastMessage.content.split('\n')[0];
       setUpsertTitle(firstLine.slice(0, 30) + (firstLine.length > 30 ? '...' : ''));
-      
+
       // Set the last message as selected
       setSelectedMessages([lastMessage.id]);
-      
+
       // Detect potential content type based on content
       let detectedType: 'code' | 'decision' | 'feature' | 'knowledge' = 'knowledge';
       const lowerContent = lastMessage.content.toLowerCase();
@@ -517,15 +521,15 @@ const TestMobileInputPage: React.FC = () => {
       } else if (lowerContent.includes('feature') || lowerContent.includes('implement') || lowerContent.includes('develop')) {
         detectedType = 'feature';
       }
-      
+
       setSelectedContentType(detectedType);
-      
+
       // Generate potential tags based on content
       const potentialTags = ['pinecone', 'knowledge-base'];
       if (lowerContent.includes('react')) potentialTags.push('react');
       if (lowerContent.includes('typescript')) potentialTags.push('typescript');
       if (lowerContent.includes('ui') || lowerContent.includes('interface')) potentialTags.push('ui');
-      
+
       setSelectedTags(potentialTags.slice(0, 3)); // Limit to 3 initial tags
     }
   };
@@ -551,10 +555,10 @@ const TestMobileInputPage: React.FC = () => {
       },
       relatedEntries: []
     };
-    
+
     // Add to our mock database
     setPineconeEntries([...pineconeEntries, newEntry]);
-    
+
     // Reset the upsert state
     setIsPineconeUpsertOpen(false);
     setSelectedContentType('knowledge');
@@ -562,7 +566,7 @@ const TestMobileInputPage: React.FC = () => {
     setUpsertTitle('');
     setUpsertContent('');
     setSelectedMessages([]);
-    
+
     // Add a confirmation message to the chat
     if (currentChat) {
       const confirmationMessage: Message = {
@@ -571,13 +575,13 @@ const TestMobileInputPage: React.FC = () => {
         role: 'assistant',
         createdAt: new Date()
       };
-      
-      const updatedChats = chats.map(chat => 
-        chat.id === currentChatId 
-          ? { ...chat, messages: [...chat.messages, confirmationMessage] } 
+
+      const updatedChats = chats.map(chat =>
+        chat.id === currentChatId
+          ? { ...chat, messages: [...chat.messages, confirmationMessage] }
           : chat
       );
-      
+
       setCurrentChat(currentChat.id);
     }
   };
@@ -586,7 +590,7 @@ const TestMobileInputPage: React.FC = () => {
   const handleViewEntry = (entry: typeof pineconeEntries[0]) => {
     setSelectedEntry(entry);
     setIsEntryDetailOpen(true);
-    
+
     // Update last accessed time and access count
     const updatedEntries = pineconeEntries.map(e => {
       if (e.id === entry.id) {
@@ -601,7 +605,7 @@ const TestMobileInputPage: React.FC = () => {
       }
       return e;
     });
-    
+
     setPineconeEntries(updatedEntries);
     toggleSidebar(); // Close the sidebar when viewing an entry
   };
@@ -610,9 +614,9 @@ const TestMobileInputPage: React.FC = () => {
     <div className="h-screen w-screen relative overflow-hidden" style={{ backgroundColor: '#F9F3E5' }}>
       {/* Add a style tag for custom mobile styles */}
       <style>{mobileDropdownStyles}</style>
-      
+
       {/* Mobile Sidebar */}
-      <div 
+      <div
         className={cn(
           "fixed top-0 left-0 h-full bg-[#F9F3E5] w-[330px] z-40 transition-transform duration-300 shadow-lg overflow-y-auto flex flex-col",
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
@@ -623,10 +627,10 @@ const TestMobileInputPage: React.FC = () => {
           <div className="flex items-center h-full">
             {/* Sidebar toggle button inside sidebar - aligned with other icons */}
             <div className="flex items-center justify-center w-7 h-7">
-              <SidebarToggle 
-                isOpen={true} 
-                wasOpen={false} 
-                onClick={toggleSidebar} 
+              <SidebarToggle
+                isOpen={true}
+                wasOpen={false}
+                onClick={toggleSidebar}
               />
             </div>
             <span className="ml-2 font-['Lora'] font-semibold text-gray-800 text-[17.5px]">ClarityAI</span>
@@ -650,9 +654,9 @@ const TestMobileInputPage: React.FC = () => {
                 New chat
               </span>
             </button>
-            
+
             {/* Chats Link */}
-            <button 
+            <button
               className={cn(
                 "flex items-center w-full h-[40px] px-3",
                 activeSection === 'chats' ? "bg-gray-100 rounded-md" : ""
@@ -666,9 +670,9 @@ const TestMobileInputPage: React.FC = () => {
                 Chats
               </span>
             </button>
-            
+
             {/* Knowledge Base Link */}
-            <button 
+            <button
               className={cn(
                 "flex items-center w-full h-[40px] px-3",
                 activeSection === 'knowledge' ? "bg-gray-100 rounded-md" : ""
@@ -719,29 +723,29 @@ const TestMobileInputPage: React.FC = () => {
               // Knowledge Base Entries
               pineconeEntries.length > 0 ? (
                 pineconeEntries.map((entry) => (
-                  <div 
+                  <div
                     key={entry.id}
                     className="p-3 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 cursor-pointer"
                     onClick={() => handleViewEntry(entry)}
                   >
                     <div className="flex items-start">
-                      <div 
+                      <div
                         className="w-2 h-full rounded-full mr-2 mt-1"
-                        style={{ 
-                          backgroundColor: 
+                        style={{
+                          backgroundColor:
                             entry.metadata.type === 'code' ? '#6366F1' :
                             entry.metadata.type === 'decision' ? '#F97316' :
                             entry.metadata.type === 'feature' ? '#8B5CF6' :
                             '#10B981'
-                        }} 
+                        }}
                       />
                       <div className="flex-1">
                         <h3 className="font-medium text-sm mb-1">{entry.metadata.title}</h3>
                         <p className="text-xs text-gray-600 line-clamp-2 mb-2">{entry.content}</p>
                         <div className="flex flex-wrap gap-1">
                           {entry.metadata.tags.slice(0, 3).map(tag => (
-                            <span 
-                              key={tag} 
+                            <span
+                              key={tag}
                               className="bg-gray-100 text-gray-800 px-1.5 py-0.5 rounded-full text-[10px]"
                             >
                               {tag}
@@ -797,14 +801,27 @@ const TestMobileInputPage: React.FC = () => {
                   </div>
                 </div>
                 <div className="py-2">
-                  <button className="w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">
-                    <Settings size={16} className="mr-2" />
-                    Settings
-                  </button>
-                  <button className="w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center">
-                    <LogOut size={16} className="mr-2" />
-                    Log out
-                  </button>
+                  <DropdownMenu open={isUserDropdownOpen} onOpenChange={setIsUserDropdownOpen}>
+                    <DropdownMenuContent
+                      align="end"
+                      className="w-56 z-50 bg-white rounded-md shadow-lg"
+                    >
+                      <DropdownMenuItem
+                        onClick={() => {
+                          navigate('/settings');
+                          setIsUserDropdownOpen(false);
+                        }}
+                        className="flex items-center gap-2 cursor-pointer touch-manipulation"
+                      >
+                        <Settings size={16} className="text-gray-500" />
+                        <span className="text-sm">Settings</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/logout')} className="cursor-pointer">
+                        <LogOut size={16} className="mr-2" />
+                        <span>Log out</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               </div>
             )}
@@ -814,7 +831,7 @@ const TestMobileInputPage: React.FC = () => {
 
       {/* Overlay when sidebar is open */}
       {isSidebarOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/20 z-30"
           onClick={toggleSidebar}
         />
@@ -841,8 +858,15 @@ const TestMobileInputPage: React.FC = () => {
                     <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center shrink-0 mt-1">
                       <span className="text-sm text-gray-700">{userProfile.initials}</span>
                     </div>
-                    <div className="ml-3 bg-white rounded-lg p-3 shadow-sm">
+                    <div className="ml-3 bg-white rounded-lg p-3 shadow-sm relative">
                       <p className="text-gray-800">{message.content}</p>
+                      {message.relatedKnowledge && message.relatedKnowledge.length > 0 && (
+                        <div className="absolute top-0 right-0 transform translate-x-1 -translate-y-1">
+                          <div className="bg-blue-100 text-blue-800 rounded-full p-1">
+                            <Database size={12} />
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ) : (
@@ -850,10 +874,16 @@ const TestMobileInputPage: React.FC = () => {
                     <div className="w-8 h-8 rounded-full shrink-0 mt-1 flex">
                       {/* AI avatar removed */}
                     </div>
-                    <div className="ml-3">
+                    <div className="ml-3 relative">
                       <p className="text-gray-800 whitespace-pre-wrap">{message.content}</p>
                       {message.isGenerating && (
                         <span className="inline-block w-1.5 h-4 ml-0.5 bg-black animate-blink"></span>
+                      )}
+                      {message.usedStoredKnowledge && (
+                        <div className="text-xs text-gray-500 mt-1 flex items-center">
+                          <Database size={12} className="mr-1" />
+                          <span>Used knowledge from Pinecone</span>
+                        </div>
                       )}
                     </div>
                   </div>
@@ -887,10 +917,10 @@ const TestMobileInputPage: React.FC = () => {
       )}
 
       {/* Chat Input - positioned at bottom when chat is active, or below greeting when no messages */}
-      <div 
+      <div
         className={cn(
           "fixed z-20 transition-all duration-300 ease-in-out w-full px-4 pb-4",
-          hasMessages 
+          hasMessages
             ? "bottom-[16px]" // Raised from bottom edge
             : "top-[calc(20%+130px)] left-1/2 -translate-x-1/2 w-[400px] px-0"
         )}
@@ -913,7 +943,7 @@ const TestMobileInputPage: React.FC = () => {
           <div className="absolute left-3.5 bottom-3">
             <DropdownMenu open={isUploadMenuOpen} onOpenChange={setIsUploadMenuOpen}>
               <DropdownMenuTrigger asChild>
-                <button 
+                <button
                   type="button"
                   className="inline-flex items-center justify-center relative border border-gray-200 rounded-lg p-1.5 hover:bg-gray-100 touch-manipulation dropdown-trigger"
                   onTouchStart={handleTouchStart}
@@ -931,16 +961,16 @@ const TestMobileInputPage: React.FC = () => {
                 className="w-56 z-[999] dropdown-content"
                 sideOffset={5}
               >
-                <DropdownMenuItem 
+                <DropdownMenuItem
                   className="flex items-center gap-2 cursor-pointer touch-manipulation"
                   onClick={handleFileUploadClick}
                 >
                   <Paperclip size={16} className="text-gray-500" />
                   <span className="text-sm">Upload a file</span>
                 </DropdownMenuItem>
-                
+
                 {currentChat && currentChat.messages.length > 0 && (
-                  <DropdownMenuItem 
+                  <DropdownMenuItem
                     className="flex items-center gap-2 cursor-pointer touch-manipulation"
                     onClick={() => {
                       handleSaveToKnowledgeBase(currentChat.messages[currentChat.messages.length - 1]);
@@ -967,24 +997,24 @@ const TestMobileInputPage: React.FC = () => {
                 <span>Stop</span>
               </button>
             )}
-            
+
             {/* Model selector */}
             <DropdownMenu open={isModelMenuOpen} onOpenChange={setIsModelMenuOpen}>
-              <DropdownMenuTrigger 
+              <DropdownMenuTrigger
                 className="flex items-center gap-1 text-sm text-gray-500 hover:bg-gray-100 rounded px-2 py-1 touch-manipulation dropdown-trigger"
                 onTouchStart={handleTouchStart}
               >
-                <span className="truncate max-w-[90px]">{selectedModel}</span> {/* Reduced from 120px to 90px */}
+                <span className="truncate max-w-[90px]">{selectedModel}</span>
                 <ChevronDown size={16} />
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 align="end"
-                side="top"
-                className="z-[999] dropdown-content w-56 -translate-x-2"
+                side="bottom"
+                className="z-[999] dropdown-content model-dropdown w-56"
                 sideOffset={5}
               >
-                {models.map((model) => (
-                  <DropdownMenuItem 
+                {models.slice(0, 2).map((model) => (
+                  <DropdownMenuItem
                     key={model.name}
                     onClick={() => setSelectedModel(model.name)}
                     className="flex flex-col items-start cursor-pointer touch-manipulation py-2 pl-2"
@@ -1021,22 +1051,22 @@ const TestMobileInputPage: React.FC = () => {
       </div>
 
       {/* Hidden file inputs */}
-      <input 
+      <input
         type="file"
         ref={fileInputRef}
         onChange={handleFileChange}
         style={{ display: 'none' }}
         accept="image/*,.pdf,.doc,.docx,.txt"
       />
-      
+
       {/* File upload progress indicator - only shown when uploading */}
       {isFileUploading && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-4 w-[80%] max-w-[300px]">
             <p className="text-center mb-2">Uploading file...</p>
             <div className="w-full bg-gray-200 rounded-full h-2.5 mb-4">
-              <div 
-                className="bg-[#C75C4A] h-2.5 rounded-full" 
+              <div
+                className="bg-[#C75C4A] h-2.5 rounded-full"
                 style={{ width: `${uploadProgress}%` }}
               ></div>
             </div>
@@ -1051,20 +1081,20 @@ const TestMobileInputPage: React.FC = () => {
           <div className="bg-white rounded-lg w-full max-w-md max-h-[90vh] overflow-hidden flex flex-col">
             <div className="p-4 border-b flex items-center justify-between">
               <h2 className="text-lg font-medium">Save to Knowledge Base</h2>
-              <button 
+              <button
                 className="text-gray-500"
                 onClick={() => setIsPineconeUpsertOpen(false)}
               >
                 <X size={18} />
               </button>
             </div>
-            
+
             <div className="flex-1 overflow-y-auto p-4">
               <div className="space-y-4">
                 {/* Title */}
                 <div>
                   <label className="text-sm font-medium text-gray-700 block mb-1">Title</label>
-                  <input 
+                  <input
                     type="text"
                     value={upsertTitle}
                     onChange={(e) => setUpsertTitle(e.target.value)}
@@ -1072,18 +1102,18 @@ const TestMobileInputPage: React.FC = () => {
                     placeholder="Entry title"
                   />
                 </div>
-                
+
                 {/* Content */}
                 <div>
                   <label className="text-sm font-medium text-gray-700 block mb-1">Content</label>
-                  <textarea 
+                  <textarea
                     value={upsertContent}
                     onChange={(e) => setUpsertContent(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md h-32 font-mono"
                     placeholder="Content"
                   />
                 </div>
-                
+
                 {/* Content Type */}
                 <div>
                   <label className="text-sm font-medium text-gray-700 block mb-1">Content Type</label>
@@ -1094,15 +1124,15 @@ const TestMobileInputPage: React.FC = () => {
                         type="button"
                         className={cn(
                           "px-3 py-2 border rounded-md flex items-center gap-2",
-                          selectedContentType === type 
+                          selectedContentType === type
                             ? "bg-blue-50 border-blue-200"
                             : "border-gray-300 text-gray-700"
                         )}
                         onClick={() => setSelectedContentType(type)}
                       >
-                        <div 
+                        <div
                           className="w-3 h-3 rounded-full"
-                          style={{ 
+                          style={{
                             backgroundColor: type === 'code' ? '#6366F1' :
                               type === 'decision' ? '#F97316' :
                               type === 'feature' ? '#8B5CF6' :
@@ -1119,18 +1149,18 @@ const TestMobileInputPage: React.FC = () => {
                     ))}
                   </div>
                 </div>
-                
+
                 {/* Tags */}
                 <div>
                   <label className="text-sm font-medium text-gray-700 block mb-1">Tags</label>
                   <div className="flex flex-wrap gap-1 mb-2">
                     {selectedTags.map(tag => (
-                      <div 
-                        key={tag} 
+                      <div
+                        key={tag}
                         className="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs flex items-center"
                       >
                         <span>{tag}</span>
-                        <button 
+                        <button
                           className="ml-1 text-gray-500 hover:text-gray-700"
                           onClick={() => setSelectedTags(selectedTags.filter(t => t !== tag))}
                         >
@@ -1139,7 +1169,7 @@ const TestMobileInputPage: React.FC = () => {
                       </div>
                     ))}
                   </div>
-                  
+
                   <div className="relative">
                     <input
                       type="text"
@@ -1158,11 +1188,11 @@ const TestMobileInputPage: React.FC = () => {
                       }}
                     />
                   </div>
-                  
+
                   <div className="mt-2">
                     <p className="text-xs text-gray-500 mb-1">Suggested tags:</p>
                     <div className="flex flex-wrap gap-1">
-                      {['react', 'typescript', 'frontend', 'ui', 'api', 'database', 'mobile'].filter(tag => 
+                      {['react', 'typescript', 'frontend', 'ui', 'api', 'database', 'mobile'].filter(tag =>
                         !selectedTags.includes(tag)
                       ).map(tag => (
                         <button
@@ -1179,15 +1209,15 @@ const TestMobileInputPage: React.FC = () => {
                 </div>
               </div>
             </div>
-            
+
             <div className="p-4 border-t flex justify-between">
-              <button 
+              <button
                 className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded"
                 onClick={() => setIsPineconeUpsertOpen(false)}
               >
                 Cancel
               </button>
-              <button 
+              <button
                 className="px-3 py-1.5 bg-blue-600 text-white rounded"
                 onClick={handleSaveToPinecone}
                 disabled={!upsertTitle.trim() || !upsertContent.trim()}
@@ -1198,40 +1228,40 @@ const TestMobileInputPage: React.FC = () => {
           </div>
         </div>
       )}
-      
+
       {/* Knowledge Entry Detail Modal */}
       {isEntryDetailOpen && selectedEntry && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-lg w-full max-w-md max-h-[90vh] overflow-hidden flex flex-col">
             <div className="p-4 border-b flex items-center justify-between">
               <div className="flex items-center">
-                <div 
+                <div
                   className="w-3 h-3 rounded-full mr-2"
-                  style={{ 
-                    backgroundColor: 
+                  style={{
+                    backgroundColor:
                       selectedEntry.metadata.type === 'code' ? '#6366F1' :
                       selectedEntry.metadata.type === 'decision' ? '#F97316' :
                       selectedEntry.metadata.type === 'feature' ? '#8B5CF6' :
                       '#10B981'
-                  }} 
+                  }}
                 />
                 <h2 className="text-lg font-medium truncate">{selectedEntry.metadata.title}</h2>
               </div>
-              <button 
+              <button
                 className="text-gray-500"
                 onClick={() => setIsEntryDetailOpen(false)}
               >
                 <X size={18} />
               </button>
             </div>
-            
+
             <div className="flex-1 overflow-y-auto p-4">
               <div className="space-y-4">
                 {/* Content */}
                 <div className="bg-gray-50 p-3 rounded-md font-mono text-sm whitespace-pre-wrap">
                   {selectedEntry.content}
                 </div>
-                
+
                 {/* Metadata */}
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
@@ -1255,14 +1285,14 @@ const TestMobileInputPage: React.FC = () => {
                     </div>
                   )}
                 </div>
-                
+
                 {/* Tags */}
                 <div>
                   <p className="text-gray-500 mb-2">Tags</p>
                   <div className="flex flex-wrap gap-1">
                     {selectedEntry.metadata.tags.map(tag => (
-                      <span 
-                        key={tag} 
+                      <span
+                        key={tag}
                         className="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs"
                       >
                         {tag}
@@ -1273,7 +1303,7 @@ const TestMobileInputPage: React.FC = () => {
                     )}
                   </div>
                 </div>
-                
+
                 {/* Source Messages */}
                 <div>
                   <p className="text-gray-500 mb-2">Source Messages</p>
@@ -1305,9 +1335,9 @@ const TestMobileInputPage: React.FC = () => {
                 </div>
               </div>
             </div>
-            
+
             <div className="p-4 border-t flex justify-between">
-              <button 
+              <button
                 className="px-3 py-1.5 border border-red-200 text-red-500 rounded"
                 onClick={() => {
                   setPineconeEntries(pineconeEntries.filter(e => e.id !== selectedEntry.id));
@@ -1317,13 +1347,13 @@ const TestMobileInputPage: React.FC = () => {
                 Delete
               </button>
               <div className="flex gap-2">
-                <button 
+                <button
                   className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded"
                   onClick={() => setIsEntryDetailOpen(false)}
                 >
                   Close
                 </button>
-                <button 
+                <button
                   className="px-3 py-1.5 bg-blue-600 text-white rounded flex items-center gap-1"
                   onClick={() => {
                     // Set up the edit form
@@ -1332,7 +1362,7 @@ const TestMobileInputPage: React.FC = () => {
                     setSelectedContentType(selectedEntry.metadata.type);
                     setSelectedTags([...selectedEntry.metadata.tags]);
                     setSelectedMessages([...selectedEntry.metadata.sourceMessageIds]);
-                    
+
                     // Close the detail modal and open the upsert modal
                     setIsEntryDetailOpen(false);
                     setIsPineconeUpsertOpen(true);
@@ -1350,4 +1380,14 @@ const TestMobileInputPage: React.FC = () => {
   );
 };
 
-export default TestMobileInputPage; 
+export default TestMobileInputPage;
+
+
+
+
+
+
+
+
+
+

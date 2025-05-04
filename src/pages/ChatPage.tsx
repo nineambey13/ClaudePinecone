@@ -10,36 +10,36 @@ import { Plus, Database, ChevronDown } from 'lucide-react';
 
 // Square icon for sidebar toggle
 const SquareIcon = () => (
-  <svg 
-    width="18" 
-    height="18" 
-    viewBox="0 0 20 20" 
-    fill="currentColor" 
-    xmlns="http://www.w3.org/2000/svg" 
+  <svg
+    width="18"
+    height="18"
+    viewBox="0 0 20 20"
+    fill="currentColor"
+    xmlns="http://www.w3.org/2000/svg"
   >
     <path fillRule="evenodd" clipRule="evenodd" d="M2.5 3C1.67157 3 1 3.67157 1 4.5V15.5C1 16.3284 1.67157 17 2.5 17H17.5C18.3284 17 19 16.3284 19 15.5V4.5C19 3.67157 18.3284 3 17.5 3H2.5ZM2 4.5C2 4.22386 2.22386 4 2.5 4H6V16H2.5C2.22386 16 2 15.7761 2 15.5V4.5ZM7 16H17.5C17.7761 16 18 15.7761 18 15.5V4.5C18 4.22386 17.7761 4 17.5 4H7V16Z"></path>
   </svg>
 );
 
 const RightArrowIcon = () => (
-  <svg 
-    width="18" 
-    height="18" 
-    viewBox="0 0 20 20" 
-    fill="currentColor" 
-    xmlns="http://www.w3.org/2000/svg" 
+  <svg
+    width="18"
+    height="18"
+    viewBox="0 0 20 20"
+    fill="currentColor"
+    xmlns="http://www.w3.org/2000/svg"
   >
     <path fillRule="evenodd" clipRule="evenodd" d="M17.5 2C17.7761 2 18 2.22386 18 2.5V17.5C18 17.7761 17.7761 18 17.5 18C17.2239 18 17 17.7761 17 17.5V2.5C17 2.22386 17.2239 2 17.5 2ZM8.63003 4.66366C8.81578 4.45933 9.13201 4.44428 9.33634 4.63003L14.8363 9.63003C14.9406 9.72479 15 9.85913 15 10C15 10.1409 14.9406 10.2752 14.8363 10.37L9.33634 15.37C9.13201 15.5557 8.81578 15.5407 8.63003 15.3363C8.44428 15.132 8.45934 14.8158 8.66366 14.63L13.2067 10.5L2.5 10.5C2.22386 10.5 2 10.2761 2 10C2 9.72386 2.22386 9.5 2.5 9.5L13.2067 9.5L8.66366 5.36997C8.45934 5.18422 8.44428 4.86799 8.63003 4.66366Z"></path>
   </svg>
 );
 
 const LeftArrowIcon = () => (
-  <svg 
-    width="18" 
-    height="18" 
-    viewBox="0 0 20 20" 
-    fill="currentColor" 
-    xmlns="http://www.w3.org/2000/svg" 
+  <svg
+    width="18"
+    height="18"
+    viewBox="0 0 20 20"
+    fill="currentColor"
+    xmlns="http://www.w3.org/2000/svg"
   >
     <path fillRule="evenodd" clipRule="evenodd" d="M5 10C5 9.85913 5.05943 9.72479 5.16366 9.63003L10.6637 4.63003C10.868 4.44428 11.1842 4.45933 11.37 4.66366C11.5557 4.86799 11.5407 5.18422 11.3363 5.36997L6.7933 9.5L17.5 9.5C17.7761 9.5 18 9.72386 18 10C18 10.2761 17.7761 10.5 17.5 10.5L6.7933 10.5L11.3363 14.63C11.5407 14.8158 11.5557 15.132 11.37 15.3363C11.1842 15.5407 10.868 15.5557 10.6637 15.37L5.16366 10.37C5.05943 10.2752 5 10.1409 5 10Z"></path>
     <path fillRule="evenodd" clipRule="evenodd" d="M2.5 2C2.77614 2 3 2.22386 3 2.5L3 17.5C3 17.7761 2.77614 18 2.5 18C2.22385 18 2 17.7761 2 17.5L2 2.5C2 2.22386 2.22386 2 2.5 2Z"></path>
@@ -62,7 +62,7 @@ const SidebarToggle = ({ isOpen, wasOpen, onClick, className }: {
   className?: string;
 }) => {
   return (
-    <div 
+    <div
       id="sidebar-toggle"
       className={cn("w-7 h-7 flex items-center justify-center cursor-pointer", className)}
       onClick={onClick}
@@ -72,20 +72,20 @@ const SidebarToggle = ({ isOpen, wasOpen, onClick, className }: {
         {(isOpen || wasOpen) && (
           <div className="absolute inset-0 bg-gray-300/50 rounded-md"></div>
         )}
-        
+
         {!isOpen ? (
           <>
             {/* Square icon - visible by default when closed */}
             <div className={cn(
-              "absolute inset-0 flex items-center justify-center transition-opacity duration-200 ease-in-out", 
+              "absolute inset-0 flex items-center justify-center transition-opacity duration-200 ease-in-out",
               wasOpen ? "opacity-0" : "opacity-100"
             )}>
               <SquareIcon />
             </div>
-            
+
             {/* Right arrow - only visible after sidebar was closed */}
             <div className={cn(
-              "absolute inset-0 flex items-center justify-center transition-opacity duration-200 ease-in-out", 
+              "absolute inset-0 flex items-center justify-center transition-opacity duration-200 ease-in-out",
               wasOpen ? "opacity-100" : "opacity-0"
             )}>
               <RightArrowIcon />
@@ -107,7 +107,7 @@ const ChatPage = () => {
   const navigate = useNavigate();
   const { chats, setCurrentChat, userProfile: contextUserProfile } = useChatContext();
   const isMobile = useIsMobile();
-  
+
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showRightArrow, setShowRightArrow] = useState(false);
   const [activeSection, setActiveSection] = useState<'chats' | 'knowledge'>('chats');
@@ -140,7 +140,7 @@ const ChatPage = () => {
       if (toggleButton && !toggleButton.contains(e.target as Node) && !isSidebarOpen) {
         setShowRightArrow(false);
       }
-      
+
       // Close user dropdown when clicking outside
       const userDropdown = document.getElementById('user-dropdown-button');
       if (userDropdown && !userDropdown.contains(e.target as Node) && isUserDropdownOpen) {
@@ -164,7 +164,7 @@ const ChatPage = () => {
     }
     setIsSidebarOpen(!isSidebarOpen);
   };
-  
+
   const handleNewChat = () => {
     // Don't create a new chat immediately - wait for first message
     setCurrentChat('');
@@ -184,7 +184,7 @@ const ChatPage = () => {
 
   return (
     <div className="flex flex-col h-full bg-[#F9F3E5] overflow-x-hidden">
-      {(hasMessages || isMobile) && <ChatHeader 
+      {(hasMessages || isMobile) && <ChatHeader
         isSidebarOpen={isSidebarOpen}
         toggleSidebar={toggleSidebar}
         showRightArrow={showRightArrow}
@@ -211,13 +211,13 @@ const ChatPage = () => {
       {isMobile && (
         <>
           {isSidebarOpen && (
-            <div 
+            <div
               className="fixed inset-0 bg-black/20 z-30"
               onClick={toggleSidebar}
             />
           )}
 
-          <div 
+          <div
             className={cn(
               "fixed top-0 left-0 h-full bg-[#F9F3E5] w-[90%] max-w-[330px] z-40 transition-transform duration-300 shadow-lg overflow-y-auto overflow-x-hidden flex flex-col",
               isSidebarOpen ? "translate-x-0" : "-translate-x-full"
@@ -227,16 +227,16 @@ const ChatPage = () => {
             <div className="flex items-center h-[44.5px] px-2">
               <div className="flex items-center h-full">
                 <div className="flex items-center justify-center w-7 h-7">
-                  <SidebarToggle 
-                    isOpen={true} 
-                    wasOpen={false} 
-                    onClick={toggleSidebar} 
+                  <SidebarToggle
+                    isOpen={true}
+                    wasOpen={false}
+                    onClick={toggleSidebar}
                   />
                 </div>
                 <span className="ml-2 font-['Lora'] font-semibold text-gray-800 text-[17.5px]">ClarityAI</span>
               </div>
             </div>
-            
+
             {/* Main Content */}
             <div className="flex flex-col flex-1 overflow-hidden">
               {/* New Chat Button */}
@@ -254,9 +254,9 @@ const ChatPage = () => {
                     New chat
                   </span>
                 </button>
-                
+
                 {/* Chats Link */}
-                <button 
+                <button
                   className={cn(
                     "flex items-center w-full h-[40px] px-3",
                     activeSection === 'chats' ? "bg-gray-100 rounded-md" : ""
@@ -270,9 +270,9 @@ const ChatPage = () => {
                     Chats
                   </span>
                 </button>
-                
+
                 {/* Knowledge Base Link */}
-                <button 
+                <button
                   className={cn(
                     "flex items-center w-full h-[40px] px-3",
                     activeSection === 'knowledge' ? "bg-gray-100 rounded-md" : ""

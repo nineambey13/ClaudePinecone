@@ -31,8 +31,8 @@ const MessageContent: React.FC<MessageContentProps> = ({ content }) => {
           code: ({children, className}) => {
             const language = className ? className.replace('language-', '') : '';
             return language ? (
-              <SyntaxHighlighter 
-                style={oneDark} 
+              <SyntaxHighlighter
+                style={oneDark}
                 language={language}
                 wrapLongLines={true}
                 customStyle={{maxWidth: '100%', overflowX: 'auto'}}
@@ -52,14 +52,14 @@ const MessageContent: React.FC<MessageContentProps> = ({ content }) => {
 };
 
 export const ChatMessages = () => {
-  const { 
-    chats, 
-    currentChatId, 
-    userProfile, 
-    updateMessage, 
-    deleteMessage, 
-    regenerateMessage, 
-    isLoading, 
+  const {
+    chats,
+    currentChatId,
+    userProfile,
+    updateMessage,
+    deleteMessage,
+    regenerateMessage,
+    isLoading,
     stopGeneration,
     addToDownloadQueue
   } = useChatContext();
@@ -72,8 +72,8 @@ export const ChatMessages = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<string[]>([]);
 
-  const currentChat = currentChatId 
-    ? chats.find(chat => chat.id === currentChatId) 
+  const currentChat = currentChatId
+    ? chats.find(chat => chat.id === currentChatId)
     : null;
 
   useEffect(() => {
@@ -114,7 +114,7 @@ export const ChatMessages = () => {
     }
   };
 
-  const filteredMessages = currentChat?.messages.filter(message => 
+  const filteredMessages = currentChat?.messages.filter(message =>
     searchQuery ? message.content.toLowerCase().includes(searchQuery.toLowerCase()) : true
   );
 
@@ -164,8 +164,8 @@ export const ChatMessages = () => {
         ) : (
             <>
               {(filteredMessages || []).map((message) => (
-            <div 
-              key={message.id} 
+            <div
+              key={message.id}
                   className={cn(
                     "mb-6 group",
                     searchResults.includes(message.id) && "bg-yellow-50/10 rounded-xl"
@@ -254,6 +254,16 @@ export const ChatMessages = () => {
                       <div className="flex justify-end items-start">
                         <div className="text-gray-800 w-full max-w-[672px] relative flex items-start gap-3">
                           <div className="flex-1 break-words">
+                            {/* Show Pinecone indicator if message used stored knowledge */}
+                            {message.usedStoredKnowledge && (
+                              <div className="flex items-center gap-1 mb-1 text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded-md w-fit">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                  <path d="M21 8V16C21 18.7614 18.7614 21 16 21H8C5.23858 21 3 18.7614 3 16V8C3 5.23858 5.23858 3 8 3H16C18.7614 3 21 5.23858 21 8Z" stroke="currentColor" strokeWidth="2" />
+                                  <path d="M12 8V16M8 12H16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                                </svg>
+                                <span>Using knowledge from Pinecone</span>
+                              </div>
+                            )}
                             <MessageContent content={message.content} />
                             {isLoading && currentChat.messages[currentChat.messages.length - 1].id === message.id && (
                               <div className="mt-2 flex items-center gap-2">

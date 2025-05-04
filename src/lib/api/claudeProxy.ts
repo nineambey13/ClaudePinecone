@@ -1,9 +1,9 @@
 import { ChatCompletionRequest, ChatCompletionResponse, ApiError } from '../../types/api';
-import { Anthropic } from '@anthropic-ai/sdk';
-import { config } from '../config';
 
-export class ClaudeApi {
-  private client: Anthropic;
+// Server API URL - will be replaced with environment variable in production
+const API_URL = '/api/claude';
+
+export class ClaudeProxyApi {
   private model: string;
   private requestQueue: Promise<any>[] = [];
   private maxConcurrentRequests: number = 3;
@@ -16,15 +16,10 @@ export class ClaudeApi {
     'Claude 3.7 Sonnet': 'claude-3-7-sonnet-20250219'
   };
 
-  constructor(apiKey: string, model = config.claude.model) {
-    this.client = new Anthropic({
-      apiKey,
-      dangerouslyAllowBrowser: true
-    });
-
+  constructor(model = 'claude-3-7-sonnet-20250219') {
     // Map UI model name to API model name if needed
     this.model = this.modelMap[model] || model;
-    console.log('ClaudeApi initialized with model:', this.model);
+    console.log('ClaudeProxyApi initialized with model:', this.model);
   }
 
   /**
@@ -62,7 +57,7 @@ export class ClaudeApi {
         throw error;
       }
 
-      // Handle Anthropic API errors
+      // Handle API errors
       if (error && typeof error === 'object' && 'status' in error) {
         const status = (error as any).status;
         if (status === 429) {
@@ -72,7 +67,7 @@ export class ClaudeApi {
         } else if (status === 400) {
           throw new ApiError('Invalid request: ' + (error as any).message);
         } else if (status >= 500) {
-          throw new ApiError('Anthropic API server error. Please try again later.');
+          throw new ApiError('API server error. Please try again later.');
         }
       }
 
@@ -90,36 +85,49 @@ export class ClaudeApi {
   async chat(request: ChatCompletionRequest): Promise<ChatCompletionResponse> {
     return this.processRequest(async () => {
       try {
-        console.log('Making request to Claude API:', {
+        console.log('Making request to Claude API via proxy:', {
           model: request.model || this.model,
           messages: request.messages
         });
 
-        const response = await this.client.messages.create({
-          model: request.model || this.model,
-          max_tokens: request.max_tokens || 1000,
-          messages: request.messages
+        const response = await fetch(`${API_URL}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            model: request.model || this.model,
+            messages: request.messages,
+            max_tokens: request.max_tokens || 4000,
+            temperature: 0.7
+          })
         });
 
-        console.log('Claude API Response:', response);
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`API error (${response.status}): ${errorText}`);
+        }
+
+        const data = await response.json();
+        console.log('Claude API Response via proxy:', data);
 
         return {
-          id: response.id,
+          id: data.id,
           role: 'assistant',
           content: [{
             type: 'text' as const,
-            text: response.content[0].type === 'text' ? response.content[0].text : JSON.stringify(response.content)
+            text: data.content[0].type === 'text' ? data.content[0].text : JSON.stringify(data.content)
           }]
         };
       } catch (error) {
-        console.error('Error in Claude API call:', error);
+        console.error('Error in Claude API call via proxy:', error);
         throw error;
       }
     });
   }
 
   private async mockStreamChat(
-    _request: ChatCompletionRequest, // Prefix with underscore to indicate it's not used
+    _request: ChatCompletionRequest,
     onChunk: (chunk: string) => void,
     onError?: (error: Error) => void,
     signal?: AbortSignal
@@ -175,22 +183,71 @@ export class ClaudeApi {
 
     return this.processRequest(async () => {
       try {
-        const stream = await this.client.messages.create({
+        console.log('Making streaming request to Claude API via proxy:', {
           model: request.model || this.model,
-          max_tokens: request.max_tokens || 1000,
-          messages: request.messages,
-          stream: true
-        }, { signal });
+          messages: request.messages
+        });
 
-        for await (const chunk of stream) {
+        const response = await fetch(`${API_URL}/stream`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            model: request.model || this.model,
+            messages: request.messages,
+            max_tokens: request.max_tokens || 4000,
+            temperature: 0.7,
+            stream: true
+          }),
+          signal
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`API error (${response.status}): ${errorText}`);
+        }
+
+        // Process the SSE stream
+        const reader = response.body!.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+
+        while (true) {
           // Check if aborted
           if (signal?.aborted) {
             onChunk(" [Generation stopped]");
             break;
           }
 
-          if (chunk.type === 'content_block_delta' && chunk.delta.type === 'text_delta') {
-            onChunk(chunk.delta.text);
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          // Decode the chunk and add it to the buffer
+          buffer += decoder.decode(value, { stream: true });
+
+          // Process complete lines in the buffer
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || ''; // Keep the last incomplete line in the buffer
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const data = line.slice(6); // Remove 'data: ' prefix
+
+              if (data === '[DONE]') {
+                break;
+              }
+
+              try {
+                const parsed = JSON.parse(data);
+                if (parsed.type === 'content_block_delta' && parsed.delta.type === 'text_delta') {
+                  onChunk(parsed.delta.text);
+                }
+              } catch (e) {
+                // If it's not valid JSON, just pass it through
+                onChunk(data);
+              }
+            }
           }
         }
       } catch (error) {
@@ -209,5 +266,3 @@ export class ClaudeApi {
     });
   }
 }
-
-

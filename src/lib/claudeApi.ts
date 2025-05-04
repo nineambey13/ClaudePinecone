@@ -5,51 +5,43 @@ import { config } from './config';
 const CLAUDE_API_KEY = import.meta.env.VITE_CLAUDE_API_KEY;
 const CLAUDE_API_URL = 'https://api.anthropic.com/v1';
 const CLAUDE_MODEL = config.claude.model;
-const EMBEDDING_MODEL = 'text-embedding-ada-002'; // OpenAI embedding model
-const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
-const OPENAI_API_URL = 'https://api.openai.com/v1';
 
 // Check if Claude API is configured
 export const isClaudeConfigured = (): boolean => {
   return !!CLAUDE_API_KEY;
 };
 
-// Check if OpenAI API is configured for embeddings
+// Check if embeddings are configured
 export const isEmbeddingConfigured = (): boolean => {
-  return !!OPENAI_API_KEY;
+  // Always return true for open source embeddings
+  // since we're using the Xenova Transformers library which doesn't require an API key
+  return true;
 };
 
-// Generate an embedding using OpenAI's embedding API
+// Generate an embedding using the Xenova Transformers library
 export const getEmbedding = async (text: string): Promise<number[]> => {
-  // If OpenAI API key is not configured, fall back to random embeddings
-  if (!isEmbeddingConfigured()) {
-    console.warn('OpenAI API is not configured for embeddings. Using placeholder embeddings.');
-    // Return a placeholder embedding (1536-dimensional vector of random values)
-    return Array.from({ length: 1536 }, () => Math.random() * 2 - 1);
-  }
-
   try {
-    // Call OpenAI's embedding API
-    const response = await axios.post(
-      `${OPENAI_API_URL}/embeddings`,
-      {
-        model: EMBEDDING_MODEL,
-        input: text,
-      },
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${OPENAI_API_KEY}`,
-        },
-      }
-    );
-    
-    // Return the embedding vector
-    return response.data.data[0].embedding;
+    // Import the generateEmbedding function from embeddings.ts
+    const { generateEmbedding } = await import('./embeddings');
+
+    // Use the open source embedding model
+    return await generateEmbedding(text);
   } catch (error) {
     console.error('Error generating embedding:', error);
-    // Fall back to random embedding in case of error
-    return Array.from({ length: 1536 }, () => Math.random() * 2 - 1);
+    // Fall back to random embedding in case of error (384 dimensions for all-MiniLM-L6-v2)
+    return Array.from({ length: 384 }, () => Math.random() * 2 - 1);
+  }
+};
+
+// Add a function to map UI model names to API model IDs
+export const getModelIdFromName = (modelName: string): string => {
+  switch (modelName) {
+    case 'Claude 3.5 Haiku':
+      return 'claude-3-5-haiku-20240307';
+    case 'Claude 3.7 Sonnet':
+      return 'claude-3-7-sonnet-20250219';
+    default:
+      return 'claude-3-5-haiku-20240307'; // Default to Haiku
   }
 };
 
@@ -57,19 +49,22 @@ export const getEmbedding = async (text: string): Promise<number[]> => {
 export const callClaude = async (
   messages: { role: 'user' | 'assistant'; content: string }[],
   temperature: number = 0.7,
-  maxTokens: number = 1000
+  maxTokens: number = 1000,
+  modelName: string = 'Claude 3.5 Haiku'
 ): Promise<string> => {
   if (!isClaudeConfigured()) {
     console.warn('Claude API is not configured.');
     return "I'm sorry, the Claude API is not configured.";
   }
 
+  const modelId = getModelIdFromName(modelName);
+
   try {
     // Format messages for Claude API
     const response = await axios.post(
       `${CLAUDE_API_URL}/messages`,
       {
-        model: CLAUDE_MODEL,
+        model: modelId,
         messages,
         temperature,
         max_tokens: maxTokens,
@@ -128,7 +123,7 @@ export const extractConcepts = async (text: string): Promise<string[]> => {
     ];
 
     const response = await callClaude(messages, 0.3, 300);
-    
+
     // Try to parse the response as JSON
     try {
       // Find JSON array in the response
@@ -145,4 +140,4 @@ export const extractConcepts = async (text: string): Promise<string[]> => {
     console.error('Error extracting concepts:', error);
     return [];
   }
-}; 
+};

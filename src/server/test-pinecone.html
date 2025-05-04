@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pinecone API Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    pre {
+      background-color: #f5f5f5;
+      padding: 10px;
+      border-radius: 5px;
+      overflow-x: auto;
+    }
+    button {
+      padding: 10px 15px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-right: 10px;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    input {
+      padding: 8px;
+      margin-bottom: 10px;
+      width: 100%;
+    }
+    .error {
+      color: red;
+    }
+    .success {
+      color: green;
+    }
+  </style>
+</head>
+<body>
+  <h1>Pinecone API Test</h1>
+  
+  <div>
+    <h2>API Key</h2>
+    <input type="text" id="apiKey" placeholder="Enter your Pinecone API key">
+  </div>
+  
+  <div>
+    <h2>Test Direct Connection</h2>
+    <button id="testDirect">Test Direct Connection</button>
+    <p>This will attempt to connect directly to Pinecone (will likely fail due to CORS)</p>
+  </div>
+  
+  <div>
+    <h2>Test Proxy Connection</h2>
+    <button id="testProxy">Test Proxy Connection</button>
+    <p>This will attempt to connect to Pinecone through your proxy server</p>
+  </div>
+  
+  <div>
+    <h2>Results</h2>
+    <pre id="results">Results will appear here...</pre>
+  </div>
+  
+  <script>
+    // Get elements
+    const apiKeyInput = document.getElementById('apiKey');
+    const testDirectButton = document.getElementById('testDirect');
+    const testProxyButton = document.getElementById('testProxy');
+    const resultsElement = document.getElementById('results');
+    
+    // Log function
+    function log(message, isError = false) {
+      const timestamp = new Date().toISOString();
+      const formattedMessage = `[${timestamp}] ${message}`;
+      
+      if (isError) {
+        resultsElement.innerHTML += `<span class="error">${formattedMessage}</span>\n`;
+      } else {
+        resultsElement.innerHTML += `<span>${formattedMessage}</span>\n`;
+      }
+      
+      // Scroll to bottom
+      resultsElement.scrollTop = resultsElement.scrollHeight;
+    }
+    
+    // Clear results
+    function clearResults() {
+      resultsElement.innerHTML = '';
+    }
+    
+    // Test direct connection
+    testDirectButton.addEventListener('click', async () => {
+      clearResults();
+      const apiKey = apiKeyInput.value.trim();
+      
+      if (!apiKey) {
+        log('Please enter a Pinecone API key', true);
+        return;
+      }
+      
+      log('Testing direct connection to Pinecone...');
+      
+      try {
+        // Create a test vector
+        const testVector = Array(384).fill(0).map(() => Math.random());
+        
+        // The URL for the Pinecone API
+        const url = 'https://clarity-opensource-pdxguy4.svc.aped-4627-b74a.pinecone.io/vectors/query';
+        
+        log(`Sending request to: ${url}`);
+        
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Api-Key': apiKey,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            vector: testVector,
+            topK: 1,
+            includeMetadata: true
+          })
+        });
+        
+        log(`Response status: ${response.status}`);
+        
+        if (response.ok) {
+          const data = await response.json();
+          log('Response data:');
+          log(JSON.stringify(data, null, 2));
+          log('Direct connection test successful!', false);
+        } else {
+          const text = await response.text();
+          log(`Error response: ${text}`, true);
+          log('Direct connection test failed', true);
+        }
+      } catch (error) {
+        log(`Error: ${error.message}`, true);
+        log('This error is expected due to CORS restrictions in browsers', true);
+      }
+    });
+    
+    // Test proxy connection
+    testProxyButton.addEventListener('click', async () => {
+      clearResults();
+      
+      log('Testing proxy connection to Pinecone...');
+      
+      try {
+        // Create a test vector
+        const testVector = Array(384).fill(0).map(() => Math.random());
+        
+        // The URL for your proxy server
+        const proxyUrl = 'http://localhost:3001/api/pinecone/query';
+        
+        log(`Sending request to proxy: ${proxyUrl}`);
+        
+        const response = await fetch(proxyUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            indexName: 'clarity-opensource',
+            vector: testVector,
+            topK: 1,
+            includeMetadata: true
+          })
+        });
+        
+        log(`Response status: ${response.status}`);
+        
+        if (response.ok) {
+          const data = await response.json();
+          log('Response data:');
+          log(JSON.stringify(data, null, 2));
+          log('Proxy connection test successful!', false);
+        } else {
+          const text = await response.text();
+          log(`Error response: ${text}`, true);
+          log('Proxy connection test failed', true);
+        }
+      } catch (error) {
+        log(`Error: ${error.message}`, true);
+      }
+    });
+  </script>
+</body>
+</html>

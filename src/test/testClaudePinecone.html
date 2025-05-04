@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Claude-Pinecone Integration Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    pre {
+      background-color: #f5f5f5;
+      padding: 10px;
+      border-radius: 5px;
+      overflow-x: auto;
+    }
+    button {
+      padding: 10px 15px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-right: 10px;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    input, textarea {
+      padding: 8px;
+      margin-bottom: 10px;
+      width: 100%;
+    }
+    .error {
+      color: red;
+    }
+    .success {
+      color: green;
+    }
+    .loading {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(0, 0, 0, 0.3);
+      border-radius: 50%;
+      border-top-color: #000;
+      animation: spin 1s ease-in-out infinite;
+      margin-left: 10px;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .knowledge-indicator {
+      display: inline-block;
+      padding: 3px 8px;
+      background-color: #e0f7fa;
+      border-radius: 4px;
+      margin-left: 10px;
+      font-size: 12px;
+      color: #006064;
+    }
+  </style>
+</head>
+<body>
+  <h1>Claude-Pinecone Integration Test</h1>
+  
+  <div>
+    <h2>Test Configuration</h2>
+    <div>
+      <label for="proxyUrl">Pinecone Proxy URL:</label>
+      <input type="text" id="proxyUrl" value="http://localhost:3001/api/pinecone">
+    </div>
+    <div>
+      <label for="query">Test Query:</label>
+      <textarea id="query" rows="3">How to implement authentication in a web application?</textarea>
+    </div>
+  </div>
+  
+  <div>
+    <h2>Test Actions</h2>
+    <button id="testPinecone">Test Pinecone Search</button>
+    <button id="testClaude">Test Claude with Pinecone</button>
+  </div>
+  
+  <div>
+    <h2>Results</h2>
+    <pre id="results">Results will appear here...</pre>
+  </div>
+  
+  <script>
+    // Get elements
+    const proxyUrlInput = document.getElementById('proxyUrl');
+    const queryInput = document.getElementById('query');
+    const testPineconeButton = document.getElementById('testPinecone');
+    const testClaudeButton = document.getElementById('testClaude');
+    const resultsElement = document.getElementById('results');
+    
+    // Log function
+    function log(message, isError = false, isSuccess = false) {
+      const timestamp = new Date().toISOString();
+      let formattedMessage = `[${timestamp}] ${message}`;
+      
+      if (isError) {
+        formattedMessage = `<span class="error">${formattedMessage}</span>`;
+      } else if (isSuccess) {
+        formattedMessage = `<span class="success">${formattedMessage}</span>`;
+      }
+      
+      resultsElement.innerHTML += formattedMessage + '\n';
+      
+      // Scroll to bottom
+      resultsElement.scrollTop = resultsElement.scrollHeight;
+    }
+    
+    // Clear results
+    function clearResults() {
+      resultsElement.innerHTML = '';
+    }
+    
+    // Test Pinecone search
+    testPineconeButton.addEventListener('click', async () => {
+      clearResults();
+      const proxyUrl = proxyUrlInput.value.trim();
+      const query = queryInput.value.trim();
+      
+      if (!proxyUrl) {
+        log('Please enter a Pinecone proxy URL', true);
+        return;
+      }
+      
+      if (!query) {
+        log('Please enter a query', true);
+        return;
+      }
+      
+      log('Testing Pinecone search...');
+      
+      try {
+        // First check if the proxy server is running
+        log(`Checking proxy server health at: ${proxyUrl.replace('/api/pinecone', '')}/health`);
+        
+        const healthCheck = await fetch(`${proxyUrl.replace('/api/pinecone', '')}/health`, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        
+        if (!healthCheck.ok) {
+          log(`Proxy server health check failed with status: ${healthCheck.status}`, true);
+          return;
+        }
+        
+        log('Proxy server is running', false, true);
+        
+        // Generate a random vector (384 dimensions)
+        log('Generating random vector...');
+        const vector = Array(384).fill(0).map(() => Math.random());
+        
+        // Send the query to the proxy
+        log(`Sending query to proxy: ${proxyUrl}/query`);
+        
+        const response = await fetch(`${proxyUrl}/query`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            indexName: 'clarity-opensource',
+            vector,
+            topK: 10,
+            includeMetadata: true,
+            includeValues: true,
+          }),
+        });
+        
+        log(`Proxy response status: ${response.status}`);
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          log(`Error response: ${errorText}`, true);
+          return;
+        }
+        
+        const data = await response.json();
+        log(`Pinecone query successful, matches: ${data.matches?.length || 0}`, false, true);
+        
+        if (data.matches && data.matches.length > 0) {
+          log('\nTop matches:');
+          data.matches.slice(0, 3).forEach((match, index) => {
+            log(`\nMatch ${index + 1}:`);
+            log(`ID: ${match.id}`);
+            log(`Score: ${match.score}`);
+            if (match.metadata) {
+              log(`Title: ${match.metadata.title || 'N/A'}`);
+              log(`Content preview: ${(match.metadata.content || '').substring(0, 100)}...`);
+            }
+          });
+        } else {
+          log('No matches found');
+        }
+      } catch (error) {
+        log(`Error: ${error.message}`, true);
+        console.error(error);
+      }
+    });
+    
+    // Test Claude with Pinecone
+    testClaudeButton.addEventListener('click', async () => {
+      clearResults();
+      const proxyUrl = proxyUrlInput.value.trim();
+      const query = queryInput.value.trim();
+      
+      if (!proxyUrl) {
+        log('Please enter a Pinecone proxy URL', true);
+        return;
+      }
+      
+      if (!query) {
+        log('Please enter a query', true);
+        return;
+      }
+      
+      log('Testing Claude with Pinecone...');
+      
+      try {
+        // First check if the proxy server is running
+        log(`Checking proxy server health at: ${proxyUrl.replace('/api/pinecone', '')}/health`);
+        
+        const healthCheck = await fetch(`${proxyUrl.replace('/api/pinecone', '')}/health`, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        
+        if (!healthCheck.ok) {
+          log(`Proxy server health check failed with status: ${healthCheck.status}`, true);
+          return;
+        }
+        
+        log('Proxy server is running', false, true);
+        
+        // Generate a random vector (384 dimensions)
+        log('Generating random vector...');
+        const vector = Array(384).fill(0).map(() => Math.random());
+        
+        // Send the query to the proxy
+        log(`Sending query to proxy: ${proxyUrl}/query`);
+        
+        const response = await fetch(`${proxyUrl}/query`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            indexName: 'clarity-opensource',
+            vector,
+            topK: 10,
+            includeMetadata: true,
+            includeValues: true,
+          }),
+        });
+        
+        log(`Proxy response status: ${response.status}`);
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          log(`Error response: ${errorText}`, true);
+          return;
+        }
+        
+        const data = await response.json();
+        log(`Pinecone query successful, matches: ${data.matches?.length || 0}`, false, true);
+        
+        // Format knowledge for Claude
+        log('\nFormatting knowledge for Claude...');
+        let enhancedPrompt = query;
+        
+        if (data.matches && data.matches.length > 0) {
+          // Format the knowledge to include in the prompt
+          let knowledgeContext = "\n\n<knowledge_base>\n";
+          
+          data.matches.forEach((match, index) => {
+            knowledgeContext += `\n<entry id="${index + 1}">\n`;
+            knowledgeContext += `<title>${match.metadata?.title || 'Untitled'}</title>\n`;
+            knowledgeContext += `<content>${match.metadata?.content || 'No content'}</content>\n`;
+            knowledgeContext += `</entry>\n`;
+          });
+          
+          knowledgeContext += "\n</knowledge_base>\n\nI've provided information from my knowledge base above. Please use this information to help answer the user's question. If the information doesn't fully address the question, please say so and answer to the best of your ability.\n\nUser's question: ";
+          
+          // Add the knowledge context to the user's message
+          enhancedPrompt = knowledgeContext + query;
+          log('Enhanced prompt created with knowledge context', false, true);
+          log(`Preview: ${enhancedPrompt.substring(0, 200)}...`);
+        } else {
+          log('Using basic prompt without knowledge context');
+        }
+        
+        // Send to Claude
+        log('\nSending to Claude...');
+        
+        // This part would normally call the Claude API, but we'll just simulate it for this test
+        log('Claude API call would happen here with the enhanced prompt');
+        log('This is a simulated response from Claude:');
+        log('\n------- SIMULATED CLAUDE RESPONSE -------');
+        log('Based on the information provided, here are some best practices for implementing authentication in a web application:');
+        log('\n1. Use secure password storage with hashing and salting');
+        log('2. Implement multi-factor authentication when possible');
+        log('3. Use HTTPS for all authentication requests');
+        log('4. Consider using OAuth or OpenID Connect for third-party authentication');
+        log('5. Implement proper session management with secure cookies');
+        log('\nWould you like me to elaborate on any of these points?');
+        log('-------------------------------');
+        
+      } catch (error) {
+        log(`Error: ${error.message}`, true);
+        console.error(error);
+      }
+    });
+  </script>
+</body>
+</html>
